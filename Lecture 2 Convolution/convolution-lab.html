@@ -1,0 +1,1440 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- CP203 Convolution Lab: interactive discrete/continuous convolution visualizer (Lecture 02). Open this file in any browser. -->
+<title>CP203 Convolution Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400;1,600&display=swap">
+<style>
+html,body{margin:0}
+[hidden]{display:none!important}
+img{max-width:100%}
+:root{
+  --bg:#EEF1F5; --surface:#FFFFFF; --ink:#18202D; --muted:#5A6577; --line:#D3DAE4;
+  --grid:rgba(52,86,140,.10); --axis:#8792A5;
+  --x:#1C2638; --h:#D0392C; --mark:#2E6BD9; --prod:#7A4ED3; --y:#12865A; --on-mark:#FFFFFF;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1219; --surface:#151B24; --ink:#E5E9F0; --muted:#98A2B3; --line:#29323F;
+    --grid:rgba(150,180,230,.08); --axis:#5F6979;
+    --x:#DDE4EF; --h:#FF6C5E; --mark:#6FA1FF; --prod:#B596FF; --y:#44CF98; --on-mark:#0E1219;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1219; --surface:#151B24; --ink:#E5E9F0; --muted:#98A2B3; --line:#29323F;
+  --grid:rgba(150,180,230,.08); --axis:#5F6979;
+  --x:#DDE4EF; --h:#FF6C5E; --mark:#6FA1FF; --prod:#B596FF; --y:#44CF98; --on-mark:#0E1219;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.6 "IBM Plex Sans Thai",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1200px;margin:0 auto;padding-inline:clamp(16px,3vw,36px);padding-block:28px 64px}
+.math{font-family:"STIX Two Text","Cambria Math","Times New Roman",serif;font-style:italic;letter-spacing:.01em}
+code{font:12.5px/1.4 "IBM Plex Mono",ui-monospace,monospace;background:color-mix(in srgb,var(--ink) 7%,transparent);padding:1px 4px;border-radius:4px;color:var(--ink);white-space:nowrap}
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:18px 32px;padding-bottom:20px;border-bottom:1px solid var(--line)}
+.eyebrow{font:500 12px/1.4 "IBM Plex Mono",ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+h1{font:600 clamp(30px,4.4vw,44px)/1.05 "STIX Two Text","Times New Roman",serif;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h1 .math{font-weight:400;color:var(--muted);font-size:.6em;margin-left:.3em;white-space:nowrap}
+.lede{margin:10px 0 0;color:var(--muted);max-width:62ch}
+.tabs{display:inline-flex;gap:4px;padding:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px;flex-wrap:wrap}
+.tabs button{appearance:none;border:0;background:transparent;color:var(--ink);font:inherit;padding:8px 14px;border-radius:9px;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;line-height:1.3;text-align:left}
+.tabs .t-name{font-weight:600;font-size:14px}
+.tabs .t-f{font-size:14px;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+.tabs button[aria-selected="true"] .t-f{color:inherit;opacity:.72}
+.layout{display:grid;grid-template-columns:310px minmax(0,1fr);gap:28px;margin-top:26px;align-items:start}
+@media (max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}}
+.group{padding-block:16px;border-top:1px dashed var(--line)}
+.group:first-child{border-top:0;padding-top:0}
+.lab{display:block;font:500 11.5px/1.4 "IBM Plex Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+select,input[type=text],input[type=number]{width:100%;font:14px/1.4 "IBM Plex Mono",ui-monospace,monospace;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+select{font-family:"IBM Plex Sans Thai",system-ui,sans-serif;cursor:pointer}
+input:hover,select:hover{border-color:var(--axis)}
+input.bad,input.bad:hover{border-color:var(--h);background:color-mix(in srgb,var(--h) 7%,var(--surface))}
+.sig-head{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin-bottom:8px}
+.sig-head .math{font-size:19px}
+.sig-head .sub{font-size:13px;color:var(--muted)}
+.sw{width:11px;height:11px;border-radius:3px;background:var(--c);flex:none}
+.seg{margin-left:auto;display:inline-flex;border:1px solid var(--line);border-radius:8px;padding:2px;gap:2px;background:var(--surface);flex:none}
+.seg button{appearance:none;border:0;background:transparent;color:var(--muted);font:500 12.5px/1 "IBM Plex Sans Thai",system-ui,sans-serif;padding:6px 10px;border-radius:6px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.row2{display:grid;grid-template-columns:minmax(0,1fr) 96px;gap:8px}
+.start{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);white-space:nowrap}
+.start input{padding:8px 4px;text-align:center}
+.prow{display:grid;grid-template-columns:84px minmax(0,1fr);gap:10px;align-items:center;margin-top:10px;font-size:14px}
+.prow output{font-size:15px;white-space:nowrap}
+.prow input{accent-color:var(--mark);width:100%}
+.tex{margin:10px 0 0;font-size:16px;line-height:1.6;overflow-x:auto}
+.vals{margin:6px 0 0;font:12.5px/1.5 "IBM Plex Mono",monospace;color:var(--muted);overflow-wrap:anywhere}
+.note{margin:8px 0 0;font-size:13px;color:var(--muted)}
+.err{margin:6px 0 0;font-size:13px;color:var(--h)}
+.pe{margin-top:10px}
+.pieces{display:grid;gap:8px}
+.piece{border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--surface)}
+.pe-cond{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+.pe-cond .math{font-size:15.5px;color:var(--ink)}
+.pe-cond input{width:66px;padding:6px 4px;text-align:center;font-size:13px}
+.pe-del{appearance:none;border:0;background:transparent;color:var(--muted);font-size:19px;line-height:1;width:30px;height:30px;border-radius:6px;cursor:pointer;margin-left:auto}
+.pe-del:hover{color:var(--h);background:color-mix(in srgb,var(--h) 9%,transparent)}
+.pe-foot{display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px}
+.pe-other{font-size:12.5px;color:var(--muted)}
+.help{margin-top:14px;font-size:13px;color:var(--muted)}
+.help summary{cursor:pointer;color:var(--ink);font-weight:500}
+.help ul{margin:8px 0 0;padding-left:1.1em;display:grid;gap:5px}
+.facts{font-size:13.5px;color:var(--muted)}
+.facts b{font-family:"IBM Plex Mono",monospace;font-weight:600;color:var(--ink)}
+.why h3,.side h3{font-size:14px;margin:0 0 8px;font-weight:600}
+.why ol{margin:0;padding-left:1.25em;display:grid;gap:8px;font-size:13.5px;color:var(--muted)}
+.why .math{color:var(--ink);font-size:15px}
+.main{display:flex;flex-direction:column;gap:14px;min-width:0}
+.transport{position:sticky;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:5;display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;box-shadow:0 8px 20px -14px rgba(20,30,50,.45)}
+.now{font-size:22px;min-width:108px;white-space:nowrap}
+.now output{font:600 20px/1 "IBM Plex Mono",monospace;color:var(--mark);font-variant-numeric:tabular-nums}
+.transport input[type=range]{flex:1 1 180px;min-width:140px;accent-color:var(--mark)}
+.btns{display:flex;gap:6px;flex-wrap:wrap}
+.btn{appearance:none;font:500 14px/1 "IBM Plex Sans Thai",system-ui,sans-serif;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:9px 12px;min-height:38px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--mark)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.sm{min-height:32px;padding:6px 10px;font-size:13px}
+.btn.icon{padding:0;width:38px;justify-content:center}
+.btn.primary{background:var(--mark);border-color:var(--mark);color:var(--on-mark)}
+:focus-visible{outline:2px solid var(--mark);outline-offset:2px}
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;counter-reset:st}
+@media (max-width:600px){.steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.steps li{counter-increment:st;border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:2px;font-size:13px;transition:background .25s,border-color .25s}
+.steps li b{font-weight:600}
+.steps li b::before{content:counter(st);display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:var(--line);color:var(--ink);font:600 11px/1 "IBM Plex Mono",monospace;margin-right:6px;vertical-align:1px}
+.steps li .math{font-size:14.5px;color:var(--muted)}
+.steps li.on{border-color:var(--mark);background:color-mix(in srgb,var(--mark) 10%,transparent)}
+.steps li.on b::before{background:var(--mark);color:var(--on-mark)}
+.plot{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px 6px}
+.plot figcaption{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 14px;align-items:baseline;margin-bottom:2px}
+.pt{font-weight:600;font-size:14px}
+.pt .math{font-weight:400;font-size:15.5px}
+.legend{display:flex;flex-wrap:wrap;gap:2px 12px;font-size:12.5px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:3px;border-radius:2px;background:var(--c)}
+.legend .math{font-size:14px;color:var(--ink)}
+canvas{display:block;width:100%;height:200px;touch-action:pan-y}
+canvas.drag{cursor:ew-resize}
+.eq{padding:12px 4px;border-block:1px dashed var(--line);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 20px;transition:opacity .2s;min-height:92px}
+.eq.dim{opacity:.4}
+.eq-body{display:flex;flex-direction:column;gap:4px;min-width:0;font-size:17px;flex:1 1 320px}
+.eq-case{font-size:13px;color:var(--muted)}
+.eq-case .math{font-size:15px;color:var(--ink)}
+.eq-l{overflow-wrap:anywhere}
+.eq-l.sym{color:var(--muted)}
+.eq-l.sub{font-size:14px;color:var(--muted)}
+.eq-r{font:600 26px/1 "IBM Plex Mono",monospace;color:var(--y);white-space:nowrap}
+.bigop{display:inline-flex;align-items:center;vertical-align:middle;margin:0 .1em 0 .12em}
+.bigop .op{font-style:normal;font-size:1.4em;line-height:1}
+.bigop .lims{display:inline-flex;flex-direction:column;justify-content:space-between;font-size:.6em;line-height:1.2;margin-left:.12em;min-height:2.1em}
+.frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;font-size:.88em;line-height:1.2;margin:0 .12em}
+.frac>span:last-child{border-top:1px solid currentColor}
+.sqrt{border-top:1px solid currentColor;padding-top:1px;margin-left:1px}
+.cases{display:inline-flex;align-items:center;vertical-align:middle}
+.cases .brace{font-size:2.8em;line-height:1;font-style:normal;font-weight:400;margin-right:.08em}
+.cases .rows{display:grid;grid-template-columns:auto auto;gap:3px 14px;align-items:center}
+.cases .cond{color:var(--muted);white-space:nowrap}
+.formula{font-size:16.5px;line-height:1.6}
+.formula .src{font:500 11.5px/1.4 "IBM Plex Mono",monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px;font-style:normal}
+.formula .par{display:block;font-size:14px;color:var(--muted);margin-top:4px}
+.ivs{list-style:none;margin:0;padding:0;display:grid;gap:6px;max-height:430px;overflow-y:auto}
+.ivs button{width:100%;text-align:left;appearance:none;background:transparent;border:1px solid var(--line);border-radius:8px;padding:7px 10px;color:var(--ink);font:inherit;cursor:pointer;display:flex;flex-direction:column;gap:2px}
+.ivs button:hover{border-color:var(--mark)}
+.ivs .c1{font-size:15px}
+.ivs .c2{font-size:14.5px;color:var(--muted);overflow-wrap:anywhere}
+.ivs button.on{border-color:var(--mark);background:color-mix(in srgb,var(--mark) 10%,transparent)}
+.ivs button.on .c2{color:var(--ink)}
+.tabular{margin-top:30px}
+.tabular h2{font-size:18px;margin:0;font-weight:600}
+.tabular p{margin:4px 0 12px;color:var(--muted);font-size:13.5px;max-width:72ch}
+.tscroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;font:13.5px/1.2 "IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;width:max-content;min-width:100%}
+th,td{padding:7px 9px;text-align:center;white-space:nowrap}
+thead th{color:var(--muted);font-weight:500;border-bottom:1px solid var(--line)}
+tbody th{font-family:"STIX Two Text",serif;font-style:italic;font-weight:400;font-size:15px;text-align:left;padding-left:14px}
+tr.xrow td{font-weight:600;color:var(--x)}
+tr.xrow th,tr.xrow td{border-bottom:1px solid var(--line)}
+tbody tr[data-n]{cursor:pointer}
+tbody tr[data-n]:hover{background:color-mix(in srgb,var(--mark) 5%,transparent)}
+tbody tr.cur,tbody tr.cur:hover{background:color-mix(in srgb,var(--mark) 13%,transparent)}
+td.hv{color:var(--h)}
+td.hv.ov{font-weight:600;background:color-mix(in srgb,var(--prod) 11%,transparent)}
+td.h0{color:var(--mark)}
+td.res,th.res{text-align:left;color:var(--muted);padding-right:16px}
+tr.cur td.res{color:var(--ink)}
+td.res b{color:var(--y);font-weight:600}
+footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <p class="eyebrow">CP203 · Lecture 02 · Signals &amp; Systems</p>
+      <h1>Convolution Lab <span class="math">y = x ∗ h</span></h1>
+      <p class="lede">ดูทีละขั้นว่าคอนโวลูชันคำนวณอย่างไร — พลิก <span class="math">h</span> เลื่อนไปทีละตำแหน่ง คูณกับ <span class="math">x</span> แล้วรวม (หรืออินทิเกรต) เป็นเอาต์พุต ใช้โจทย์จากสไลด์ หรือเขียนสัญญาณเองเป็นสูตรพร้อมเงื่อนไขก็ได้ ลากบนกราฟเพื่อเลื่อน</p>
+    </div>
+    <div class="tabs" role="tablist" aria-label="ชนิดสัญญาณ">
+      <button role="tab" id="tab-d" aria-selected="true" aria-controls="panel-d"><span class="t-name">Discrete-time</span><span class="t-f math">y[n] = Σ x[k] h[n − k]</span></button>
+      <button role="tab" id="tab-c" aria-selected="false" aria-controls="panel-c"><span class="t-name">Continuous-time</span><span class="t-f math">y(t) = ∫ x(τ) h(t − τ) dτ</span></button>
+    </div>
+  </header>
+
+  <!-- ================= DISCRETE ================= -->
+  <section id="panel-d" role="tabpanel" aria-labelledby="tab-d">
+    <div class="layout">
+      <aside class="side">
+        <div class="group">
+          <label class="lab" for="d-preset">ตัวอย่าง</label>
+          <select id="d-preset"></select>
+          <p class="note" id="d-note"></p>
+        </div>
+        <div class="group">
+          <div class="sig-head"><span class="sw" style="--c:var(--x)"></span><span class="math">x[n]</span><span class="sub">อินพุต</span>
+            <span class="seg" role="group" aria-label="วิธีกำหนด x[n]"><button type="button" data-sig="x" data-mode="list" aria-pressed="true">ตัวเลข</button><button type="button" data-sig="x" data-mode="formula" aria-pressed="false">สูตร + เงื่อนไข</button></span></div>
+          <div class="row2" id="d-x-list">
+            <input type="text" id="d-x" inputmode="decimal" aria-label="ค่าของ x[n] คั่นด้วยจุลภาค" spellcheck="false" autocomplete="off">
+            <label class="start">เริ่ม n =<input type="number" id="d-xs" step="1" min="-10" max="10"></label>
+          </div>
+          <div id="d-x-pe" hidden></div>
+          <p class="tex math" id="d-x-tex" hidden></p>
+          <p class="vals" id="d-x-vals" hidden></p>
+          <p class="err" id="d-x-err" hidden></p>
+        </div>
+        <div class="group">
+          <div class="sig-head"><span class="sw" style="--c:var(--h)"></span><span class="math">h[n]</span><span class="sub">impulse resp.</span>
+            <span class="seg" role="group" aria-label="วิธีกำหนด h[n]"><button type="button" data-sig="h" data-mode="list" aria-pressed="true">ตัวเลข</button><button type="button" data-sig="h" data-mode="formula" aria-pressed="false">สูตร + เงื่อนไข</button></span></div>
+          <div class="row2" id="d-h-list">
+            <input type="text" id="d-h" inputmode="decimal" aria-label="ค่าของ h[n] คั่นด้วยจุลภาค" spellcheck="false" autocomplete="off">
+            <label class="start">เริ่ม n =<input type="number" id="d-hs" step="1" min="-10" max="10"></label>
+          </div>
+          <div id="d-h-pe" hidden></div>
+          <p class="tex math" id="d-h-tex" hidden></p>
+          <p class="vals" id="d-h-vals" hidden></p>
+          <p class="err" id="d-h-err" hidden></p>
+          <details class="help">
+            <summary>วิธีเขียนสูตรและเงื่อนไข</summary>
+            <ul>
+              <li>ตัวแปร <code>n</code> · ค่าคงที่ <code>pi</code>, <code>e</code></li>
+              <li><code>+ - * / ^</code> และคูณติดกันได้ เช่น <code>2n</code>, <code>(1/2)^n</code>, <code>0.8^n cos(pi n/4)</code></li>
+              <li>ฟังก์ชัน <code>u[n]</code>, <code>delta[n]</code> (หรือ <code>δ[n]</code>), <code>exp()</code>, <code>sin()</code>, <code>cos()</code>, <code>sqrt()</code>, <code>|n|</code></li>
+              <li>แต่ละแถวคือ “สูตร เมื่อ a ≤ n ≤ b” (จำนวนเต็ม รวมไม่เกิน 20 จุด) นอกทุกเงื่อนไข = 0 ถ้าช่วงทับกัน ใช้แถวบนก่อน</li>
+            </ul>
+          </details>
+        </div>
+        <div class="group facts" id="d-facts"></div>
+        <div class="group why">
+          <h3>ทำไมสูตรเป็นแบบนี้</h3>
+          <ol>
+            <li>แยก <span class="math">x[n]</span> เป็นอิมพัลส์ที่เลื่อนแล้วคูณน้ำหนัก: <span class="math">x[n] = Σ x[k] δ[n − k]</span></li>
+            <li>ระบบ time-invariant: อินพุต <span class="math">δ[n − k]</span> ให้เอาต์พุต <span class="math">h[n − k]</span></li>
+            <li>ระบบ linear: รวมผลตอบสนองทุกตัว ได้ <span class="math">y[n] = Σ x[k] h[n − k]</span></li>
+          </ol>
+        </div>
+      </aside>
+
+      <div class="main">
+        <div class="transport">
+          <div class="now"><span class="math">n</span> = <output id="d-nval">0</output></div>
+          <input type="range" id="d-n" step="1" aria-label="เลือกค่า n">
+          <div class="btns">
+            <button class="btn icon" id="d-prev" aria-label="n ก่อนหน้า"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5.5L8.5 12l6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <button class="btn icon primary" id="d-play" aria-label="เล่นอัตโนมัติ"></button>
+            <button class="btn icon" id="d-next" aria-label="n ถัดไป"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5.5l6.5 6.5L9 18.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <button class="btn" id="d-demo">ดูการพลิก → เลื่อน</button>
+          </div>
+        </div>
+
+        <ol class="steps" id="d-steps">
+          <li><b>พลิก</b><span class="math">h[k] → h[−k]</span></li>
+          <li><b>เลื่อน</b><span class="math" id="d-s2">h[−k] → h[n − k]</span></li>
+          <li><b>คูณ</b><span class="math">x[k] · h[n − k]</span></li>
+          <li><b>รวม</b><span class="math">Σ<sub>k</sub> → y[n]</span></li>
+        </ol>
+
+        <figure class="plot">
+          <figcaption>
+            <span class="pt">อินพุตคงที่ กับ h ที่พลิกแล้วเลื่อน</span>
+            <span class="legend"><span><i style="--c:var(--x)"></i><span class="math">x[k]</span></span><span><i style="--c:var(--h)"></i><span class="math">h[n − k]</span></span><span><i style="--c:var(--mark)"></i><span class="math">h[0]</span> อยู่ที่ <span class="math">k = n</span></span></span>
+          </figcaption>
+          <canvas id="d-pa" class="drag" data-h="236" aria-label="กราฟ x[k] และ h[n−k] ลากซ้ายขวาเพื่อเปลี่ยน n"></canvas>
+        </figure>
+
+        <figure class="plot">
+          <figcaption>
+            <span class="pt">ผลคูณทีละจุด</span>
+            <span class="legend"><span><i style="--c:var(--prod)"></i><span class="math">x[k] · h[n − k]</span></span></span>
+          </figcaption>
+          <canvas id="d-pb" data-h="170" aria-label="กราฟผลคูณ x[k]h[n−k]"></canvas>
+        </figure>
+
+        <div class="eq" id="d-eq" aria-live="polite"></div>
+
+        <figure class="plot">
+          <figcaption>
+            <span class="pt">เอาต์พุตที่คำนวณแล้ว</span>
+            <span class="legend"><span><i style="--c:var(--y)"></i><span class="math">y[n]</span></span></span>
+          </figcaption>
+          <canvas id="d-pc" class="drag" data-h="196" aria-label="กราฟเอาต์พุต y[n] คลิกเพื่อไปที่ n นั้น"></canvas>
+        </figure>
+      </div>
+    </div>
+
+    <section class="tabular">
+      <h2>วิธีตาราง (Tabular method)</h2>
+      <p>แต่ละแถวคือ <span class="math">h</span> ที่กลับด้านแล้ววางใต้ <span class="math">x[k]</span> ให้ <span class="math">h[0]</span> (สีน้ำเงิน) ตรงกับคอลัมน์ <span class="math">k = n</span> — คูณคอลัมน์ที่ตรงกัน (ช่องสีม่วง) แล้วบวก คลิกแถวเพื่อกระโดดไปที่ <span class="math">n</span> นั้น</p>
+      <div class="tscroll" id="d-table"></div>
+    </section>
+  </section>
+
+  <!-- ================= CONTINUOUS ================= -->
+  <section id="panel-c" role="tabpanel" aria-labelledby="tab-c" hidden>
+    <div class="layout">
+      <aside class="side">
+        <div class="group">
+          <label class="lab" for="c-preset">ตัวอย่าง</label>
+          <select id="c-preset"></select>
+          <p class="note" id="c-note"></p>
+        </div>
+        <div class="group">
+          <div class="sig-head"><span class="sw" style="--c:var(--x)"></span><span class="math">x(t)</span><span class="sub">สัญญาณอินพุต</span></div>
+          <select id="c-xshape" aria-label="รูปแบบของ x(t)"></select>
+          <div class="prow" id="c-xrow"><output id="c-xpl" class="math"></output><input type="range" id="c-xp" aria-label="พารามิเตอร์ของ x(t)"></div>
+          <div id="c-xpe" hidden></div>
+          <p class="tex math" id="c-xtex"></p>
+          <p class="err" id="c-xwarn" hidden></p>
+        </div>
+        <div class="group">
+          <div class="sig-head"><span class="sw" style="--c:var(--h)"></span><span class="math">h(t)</span><span class="sub">impulse response</span></div>
+          <select id="c-hshape" aria-label="รูปแบบของ h(t)"></select>
+          <div class="prow" id="c-hrow"><output id="c-hpl" class="math"></output><input type="range" id="c-hp" aria-label="พารามิเตอร์ของ h(t)"></div>
+          <div id="c-hpe" hidden></div>
+          <p class="tex math" id="c-htex"></p>
+          <p class="err" id="c-hwarn" hidden></p>
+          <details class="help">
+            <summary>วิธีเขียนสูตรและเงื่อนไข</summary>
+            <ul>
+              <li>เลือก “✎ เขียนเอง” ในเมนูรูปแบบ แล้วแก้สูตรกับช่วงได้เลย</li>
+              <li>ตัวแปร <code>t</code> · ค่าคงที่ <code>pi</code>, <code>e</code></li>
+              <li><code>+ - * / ^</code> และคูณติดกันได้ เช่น <code>2t</code>, <code>3e^(-2t)</code>, <code>e^-t</code>, <code>t e^-t</code></li>
+              <li>ฟังก์ชัน <code>exp()</code>, <code>sin()</code>, <code>cos()</code>, <code>sqrt()</code>, <code>|t|</code> หรือ <code>abs()</code>, <code>u(t)</code>, <code>rect(t)</code>, <code>tri(t)</code></li>
+              <li>แต่ละแถวคือ “สูตร เมื่อ a ≤ t &lt; b” ใส่ <code>inf</code> / <code>-inf</code> หรือ <code>2pi</code> ได้ นอกทุกเงื่อนไข = 0 ถ้าช่วงทับกัน ใช้แถวบนก่อน</li>
+            </ul>
+          </details>
+        </div>
+        <div class="group formula" id="c-formula"></div>
+        <div class="group">
+          <h3>แบ่งช่วงคิดตามค่า <span class="math">t</span></h3>
+          <ul class="ivs" id="c-ivs"></ul>
+          <p class="note">จุดเปลี่ยนช่วงคือผลบวกของขอบ (รวมรอยต่อเงื่อนไข) ของ <span class="math">x</span> กับ <span class="math">h</span> — ในแต่ละช่วงเขียนอินทิกรัลเป็นสูตรเดียวได้ ถ้าช่วงที่ซ้อนทับคร่อมรอยต่อ จะแยกเป็นหลายอินทิกรัล</p>
+        </div>
+        <div class="group why">
+          <h3>ขั้นตอนแบบกราฟ (สไลด์ 61)</h3>
+          <ol>
+            <li>ตรึงค่า <span class="math">t</span> แล้ววาด <span class="math">x(τ)</span> กับ <span class="math">h(t − τ)</span> บนแกน <span class="math">τ</span></li>
+            <li>คูณกันเป็น <span class="math">g(t, τ) = x(τ) h(t − τ)</span></li>
+            <li>อินทิเกรตเทียบ <span class="math">τ</span> = พื้นที่ใต้ <span class="math">g</span> — <span class="math">τ</span> หายไป เหลือ <span class="math">y(t)</span></li>
+          </ol>
+        </div>
+      </aside>
+
+      <div class="main">
+        <div class="transport">
+          <div class="now"><span class="math">t</span> = <output id="c-tval">0</output></div>
+          <input type="range" id="c-t" step="0.01" aria-label="เลือกค่า t">
+          <div class="btns">
+            <button class="btn icon primary" id="c-play" aria-label="เล่นอัตโนมัติ"></button>
+            <button class="btn" id="c-demo">ดูการพลิก → เลื่อน</button>
+          </div>
+        </div>
+
+        <ol class="steps" id="c-steps">
+          <li><b>พลิก</b><span class="math">h(τ) → h(−τ)</span></li>
+          <li><b>เลื่อน</b><span class="math" id="c-s2">h(−τ) → h(t − τ)</span></li>
+          <li><b>คูณ</b><span class="math">x(τ) · h(t − τ)</span></li>
+          <li><b>อินทิเกรต</b><span class="math">พื้นที่ → y(t)</span></li>
+        </ol>
+
+        <figure class="plot">
+          <figcaption>
+            <span class="pt">บนแกน <span class="math">τ</span> ที่ค่า <span class="math">t</span> คงที่</span>
+            <span class="legend"><span><i style="--c:var(--x)"></i><span class="math">x(τ)</span></span><span><i style="--c:var(--h)"></i><span class="math">h(t − τ)</span></span><span><i style="--c:var(--prod)"></i>ช่วงที่ซ้อนทับ</span></span>
+          </figcaption>
+          <canvas id="c-pa" class="drag" data-h="226" aria-label="กราฟ x(τ) และ h(t−τ) ลากซ้ายขวาเพื่อเปลี่ยน t"></canvas>
+        </figure>
+
+        <figure class="plot">
+          <figcaption>
+            <span class="pt">ผลคูณ และพื้นที่ใต้กราฟ</span>
+            <span class="legend"><span><i style="--c:var(--prod)"></i><span class="math">g(t, τ) = x(τ) h(t − τ)</span></span></span>
+          </figcaption>
+          <canvas id="c-pb" data-h="176" aria-label="กราฟผลคูณ g(t,τ) พร้อมพื้นที่"></canvas>
+        </figure>
+
+        <div class="eq" id="c-eq" aria-live="polite"></div>
+
+        <figure class="plot">
+          <figcaption>
+            <span class="pt">เอาต์พุต</span>
+            <span class="legend"><span><i style="--c:var(--y)"></i><span class="math">y(t)</span> ที่ลากผ่านมาแล้ว</span><span><i style="--c:var(--axis)"></i>ทั้งเส้น (เฉลย)</span></span>
+          </figcaption>
+          <canvas id="c-pc" class="drag" data-h="196" aria-label="กราฟ y(t) ลากเพื่อเปลี่ยน t"></canvas>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <footer>อ้างอิงเนื้อหาและโจทย์จาก CP203 Lecture 02 — Convolution (สไลด์ 49–64) · Oppenheim &amp; Willsky, <i>Signals and Systems</i> บทที่ 2</footer>
+</div>
+
+<script>
+(function(){
+'use strict';
+const $ = s => document.querySelector(s);
+const RM = window.matchMedia('(prefers-reduced-motion: reduce)');
+const MINUS = '−';
+const C = {};
+function readColors(){
+  const cs = getComputedStyle(document.documentElement);
+  ['ink','muted','line','grid','axis','x','h','mark','prod','y','surface'].forEach(k => { C[k] = cs.getPropertyValue('--'+k).trim() || '#888'; });
+}
+readColors();
+
+/* ---------- formatting ---------- */
+function fmt(v, d){
+  if (d == null) d = 3;
+  if (!isFinite(v)) return (v < 0 ? MINUS : '') + '∞';
+  if (Math.abs(v) < 1e-9) v = 0;
+  const a = Math.abs(v);
+  const s = Number.isInteger(a) ? String(a) : String(+a.toFixed(d));
+  return (v < 0 && +s !== 0 ? MINUS : '') + s;
+}
+const fmtP = (v, d) => v < 0 ? '(' + fmt(v, d) + ')' : fmt(v, d);
+const fx2 = v => !isFinite(v) ? fmt(v) : (v < -0.004 ? MINUS : '') + Math.abs(v).toFixed(2);
+const f3 = v => (v < -0.0004 ? MINUS : '') + Math.abs(v).toFixed(3);
+function tExpr(c){ if (Math.abs(c) < 1e-12) return 't'; return c > 0 ? 't + ' + fmt(c, 2) : 't ' + MINUS + ' ' + fmt(-c, 2); }
+function nExpr(n){ return n === 0 ? MINUS + 'k' : fmt(n) + ' ' + MINUS + ' k'; }
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+function niceStep(range, target){
+  const raw = range / Math.max(1, target);
+  const p = Math.pow(10, Math.floor(Math.log10(raw)));
+  const f = raw / p;
+  return (f < 1.5 ? 1 : f < 3 ? 2 : f < 7 ? 5 : 10) * p;
+}
+function rng(lo, hi){ const s = (hi - lo) || 1; return [lo - (lo < 0 ? .3 : .1) * s, hi + (hi > 0 ? .3 : .1) * s]; }
+const ease = p => p < .5 ? 2*p*p : 1 - Math.pow(-2*p + 2, 2) / 2;
+function bigop(sym, lo, hi){ return `<span class="bigop"><span class="op">${sym}</span><span class="lims"><span>${hi}</span><span>${lo}</span></span></span>`; }
+function frac(a, b){ return `<span class="frac"><span>${a}</span><span>${b}</span></span>`; }
+function cases(rows){ return `<span class="cases"><span class="brace">{</span><span class="rows">${rows.map(r => `<span>${r[0]}</span><span class="cond">${r[1]}</span>`).join('')}</span></span>`; }
+function uniq(arr){ const s = arr.slice().sort((a, b) => a - b); return s.filter((v, i) => i === 0 || Math.abs(v - s[i - 1]) > 1e-9); }
+function samples(a, b, n, crit){
+  const out = [];
+  for (let i = 0; i <= n; i++) out.push(a + (b - a) * i / n);
+  const e = 1e-7;
+  (crit || []).forEach(c => { if (isFinite(c)) [c - e, c, c + e].forEach(v => { if (v > a && v < b) out.push(v); }); });
+  return out.sort((p, q) => p - q);
+}
+const ICON_PLAY = '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg>';
+const ICON_PAUSE = '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.6v14H7zM13.4 5H17v14h-3.6z" fill="currentColor"/></svg>';
+
+/* =====================================================================
+   EXPRESSION PARSER  (safe: builds closures, no eval)
+   ===================================================================== */
+const FUNCS = {
+  exp: Math.exp, sin: Math.sin, cos: Math.cos, tan: Math.tan, sqrt: Math.sqrt, abs: Math.abs,
+  ln: Math.log, log: Math.log, sign: Math.sign,
+  u: x => x >= 0 ? 1 : 0,
+  rect: x => Math.abs(x) <= .5 ? 1 : 0,
+  tri: x => Math.abs(x) < 1 ? 1 - Math.abs(x) : 0,
+  delta: x => Math.abs(x) < 1e-9 ? 1 : 0
+};
+const NAMES = Object.keys(FUNCS).concat(['pi', 'e']);
+function tokenize(src, v){
+  const s = String(src).replace(/[−–—]/g, '-').replace(/[×·∙⋅]/g, '*').replace(/÷/g, '/')
+    .replace(/π/g, 'pi').replace(/δ/g, 'delta').replace(/\[/g, '(').replace(/\]/g, ')').replace(/\*\*/g, '^');
+  const toks = []; let i = 0, sp = false;
+  const names = NAMES.concat(v ? [v] : []).sort((a, b) => b.length - a.length);
+  while (i < s.length){
+    const ch = s[i];
+    if (/\s/.test(ch)){ i++; sp = true; continue; }
+    if (/[0-9.]/.test(ch)){
+      const m = /^(\d+\.?\d*|\.\d+)/.exec(s.slice(i));
+      if (!m) throw new Error(`อ่านตัวเลขไม่ได้ตรง "${s.slice(i, i + 4)}"`);
+      toks.push({type:'num', val:m[0], sp}); i += m[0].length; sp = false; continue;
+    }
+    if (/[a-zA-Z]/.test(ch)){
+      const run = /^[a-zA-Z]+/.exec(s.slice(i))[0], low = run.toLowerCase(); let j = 0, first = true;
+      while (j < low.length){
+        const nm = names.find(n => low.startsWith(n, j));
+        if (!nm) throw new Error(`ไม่รู้จัก "${run}"` + (v ? ` (ตัวแปรคือ ${v})` : ' (ต้องเป็นตัวเลข)'));
+        toks.push({type:'id', val:nm, sp: first ? sp : false}); j += nm.length; first = false;
+      }
+      i += run.length; sp = false; continue;
+    }
+    if ('+-*/^()|,'.includes(ch)){ toks.push({type:'op', val:ch, sp}); i++; sp = false; continue; }
+    throw new Error(`ใช้อักขระ "${ch}" ไม่ได้`);
+  }
+  return toks;
+}
+function parseExpr(src, v){
+  if (!String(src).trim()) throw new Error('ยังไม่ได้ใส่สูตร');
+  const toks = tokenize(src, v); let p = 0, absDepth = 0;
+  const peek = () => toks[p], next = () => toks[p++];
+  const isOp = (t, c) => t && t.type === 'op' && t.val === c;
+  const startsFactor = t => t && (t.type === 'num' || t.type === 'id' || isOp(t, '(') || (isOp(t, '|') && absDepth === 0));
+  function expr(){
+    let n = term();
+    while (isOp(peek(), '+') || isOp(peek(), '-')){ const o = next().val; n = {k: o === '+' ? 'add' : 'sub', a: n, b: term()}; }
+    return n;
+  }
+  function term(){
+    let n = unary();
+    for (;;){
+      const t = peek();
+      if (isOp(t, '*') || isOp(t, '/')){ next(); n = {k: t.val === '*' ? 'mul' : 'div', a: n, b: unary()}; }
+      else if (startsFactor(t)) n = {k:'mul', a: n, b: power()};
+      else break;
+    }
+    return n;
+  }
+  function unary(){
+    if (isOp(peek(), '-')){ next(); return {k:'neg', a: unary()}; }
+    if (isOp(peek(), '+')){ next(); return unary(); }
+    return power();
+  }
+  function power(){
+    const b = primary();
+    if (isOp(peek(), '^')){ next(); return {k:'pow', a: b, b: expo()}; }
+    return b;
+  }
+  function expo(){ // e^-2t  →  e^(-2t)  (a number glued to what follows stays in the exponent)
+    if (isOp(peek(), '-')){ next(); return {k:'neg', a: expo()}; }
+    if (isOp(peek(), '+')){ next(); return expo(); }
+    let n = power();
+    while (n.k === 'num' || n.tight){
+      const t = peek();
+      if (t && !t.sp && (t.type === 'id' || isOp(t, '('))) n = {k:'mul', a: n, b: power(), tight: true};
+      else break;
+    }
+    return n;
+  }
+  function primary(){
+    const t = next();
+    if (!t) throw new Error('สูตรยังไม่จบ');
+    if (t.type === 'num') return {k:'num', v: +t.val};
+    if (t.type === 'id'){
+      if (t.val === v) return {k:'var'};
+      if (t.val === 'pi') return {k:'const', name:'pi', v: Math.PI};
+      if (t.val === 'e') return {k:'const', name:'e', v: Math.E};
+      if (t.val === 'delta' && v === 't') throw new Error('δ(t) วาดแบบ continuous ไม่ได้ — ใช้ได้เฉพาะ discrete');
+      if (!isOp(peek(), '(')) throw new Error(`${t.val} ต้องตามด้วยวงเล็บ เช่น ${t.val}(${v || 'x'})`);
+      next(); const a = expr();
+      if (!isOp(next(), ')')) throw new Error('วงเล็บไม่ครบ');
+      return {k:'fn', name: t.val, a};
+    }
+    if (isOp(t, '(')){ const a = expr(); if (!isOp(next(), ')')) throw new Error('วงเล็บไม่ครบ'); return {k:'paren', a}; }
+    if (isOp(t, '|')){ absDepth++; const a = expr(); absDepth--; if (!isOp(next(), '|')) throw new Error('ใส่ | ปิดให้ครบ'); return {k:'fn', name:'abs', a}; }
+    throw new Error(`ไม่คาดว่าจะเจอ "${t.val}"`);
+  }
+  const root = expr();
+  if (p < toks.length) throw new Error(`ไม่คาดว่าจะเจอ "${toks[p].val}"`);
+  return root;
+}
+function compileAst(n){
+  switch (n.k){
+    case 'num': case 'const': { const c = n.v; return () => c; }
+    case 'var': return x => x;
+    case 'paren': return compileAst(n.a);
+    case 'neg': { const a = compileAst(n.a); return x => -a(x); }
+    case 'fn': { const f = FUNCS[n.name], a = compileAst(n.a); return x => f(a(x)); }
+  }
+  const a = compileAst(n.a), b = compileAst(n.b);
+  switch (n.k){
+    case 'add': return x => a(x) + b(x);
+    case 'sub': return x => a(x) - b(x);
+    case 'mul': return x => a(x) * b(x);
+    case 'div': return x => a(x) / b(x);
+    case 'pow': return x => Math.pow(a(x), b(x));
+  }
+}
+/* pretty-printer → HTML, with the variable substituted (e.g. t → τ, or t → t − τ) */
+const PR = {add:1, mul:2, pow:3, atom:4};
+const unp = n => n.k === 'paren' ? unp(n.a) : n;
+const isOne = n => { n = unp(n); return n.k === 'num' && n.v === 1; };
+function pretty(n, sub, inExp){
+  n = unp(n);
+  const w = (r, need) => r.p < need ? `(${r.h})` : r.h;
+  switch (n.k){
+    case 'num': return {h: fmt(n.v, 4), p: PR.atom};
+    case 'const': return {h: n.name === 'pi' ? 'π' : 'e', p: PR.atom};
+    case 'var': return {h: sub.h, p: sub.p};
+    case 'neg': { const a = pretty(n.a, sub, inExp); return {h: MINUS + w(a, PR.mul), p: PR.add}; }
+    case 'add': {
+      const a = pretty(n.a, sub, inExp);
+      if (unp(n.b).k === 'neg'){ const b = pretty(unp(n.b).a, sub, inExp); return {h: `${a.h} ${MINUS} ${w(b, PR.mul)}`, p: PR.add}; }
+      return {h: `${a.h} + ${pretty(n.b, sub, inExp).h}`, p: PR.add};
+    }
+    case 'sub': { const a = pretty(n.a, sub, inExp), b = pretty(n.b, sub, inExp); return {h: `${a.h} ${MINUS} ${w(b, PR.mul)}`, p: PR.add}; }
+    case 'mul': {
+      const L = unp(n.a), R = unp(n.b);
+      if (isOne(L)) return pretty(R, sub, inExp);
+      if (L.k === 'neg') return pretty({k:'neg', a:{k:'mul', a:L.a, b:R}}, sub, inExp);
+      const a = pretty(L, sub, inExp), b = pretty(R, sub, inExp);
+      const A = w(a, PR.mul), B = (b.p <= PR.add) ? `(${b.h})` : b.h;
+      const juxt = (L.k === 'num' || L.k === 'const') && R.k !== 'num' && !/^[0-9]/.test(B);
+      return {h: juxt ? A + B : `${A}·${B}`, p: PR.mul};
+    }
+    case 'div': {
+      const a = pretty(n.a, sub, inExp), b = pretty(n.b, sub, inExp);
+      if (inExp) return {h: `${w(a, PR.pow)}/${w(b, PR.pow)}`, p: PR.mul};
+      return {h: frac(a.h, b.h), p: PR.mul};
+    }
+    case 'pow': { const a = pretty(n.a, sub, inExp), b = pretty(n.b, sub, true); return {h: `${w(a, PR.atom)}<sup>${b.h}</sup>`, p: PR.pow}; }
+    case 'fn': {
+      if (n.name === 'exp') return {h: `e<sup>${pretty(n.a, sub, true).h}</sup>`, p: PR.pow};
+      const a = pretty(n.a, sub, inExp);
+      if (n.name === 'abs') return {h: `|${a.h}|`, p: PR.atom};
+      if (n.name === 'sqrt') return {h: `√<span class="sqrt">${a.h}</span>`, p: PR.atom};
+      if (n.name === 'delta') return {h: `δ(${a.h})`, p: PR.atom};
+      return {h: `${n.name}(${a.h})`, p: PR.atom};
+    }
+  }
+  return {h: '?', p: PR.atom};
+}
+function parseBound(s, side, discrete){
+  const t = String(s).trim().replace(/[−–]/g, '-').replace(/∞/g, 'inf');
+  if (t === '' || /^[+-]?inf(inity)?$/i.test(t)){
+    if (discrete) throw new Error('ใส่เป็นจำนวนเต็ม');
+    if (t === '') return side * Infinity;
+    return t[0] === '-' ? -Infinity : Infinity;
+  }
+  const val = compileAst(parseExpr(t, null))(0);
+  if (!isFinite(val)) throw new Error('ไม่ใช่ตัวเลข');
+  if (discrete && Math.abs(val - Math.round(val)) > 1e-9) throw new Error('ต้องเป็นจำนวนเต็ม');
+  return discrete ? Math.round(val) : val;
+}
+const bstr = v => v === Infinity ? 'inf' : v === -Infinity ? '-inf' : String(+(+v).toFixed(6));
+function condHTML(a, b, v, discrete){
+  if (discrete) return a === b ? `${v} = ${fmt(a)}` : `${fmt(a)} ≤ ${v} ≤ ${fmt(b)}`;
+  if (!isFinite(a) && !isFinite(b)) return `ทุก ${v}`;
+  if (!isFinite(a)) return `${v} &lt; ${fmt(b, 3)}`;
+  if (!isFinite(b)) return `${v} ≥ ${fmt(a, 3)}`;
+  return `${fmt(a, 3)} ≤ ${v} &lt; ${fmt(b, 3)}`;
+}
+function piecesPretty(pcs, v, discrete){
+  const sub = {h: v, p: PR.atom};
+  if (pcs.length === 1 && !isFinite(pcs[0].a) && !isFinite(pcs[0].b)) return pretty(pcs[0].ast, sub).h;
+  const rows = pcs.map(q => [pretty(q.ast, sub).h, condHTML(q.a, q.b, v, discrete)]);
+  rows.push(['0', 'otherwise']);
+  return cases(rows);
+}
+
+/* ---------- piecewise editor ---------- */
+function PieceEditor(root, opt){
+  let rows = [];
+  const v = opt.v, rel = opt.discrete ? '≤' : '&lt;';
+  root.classList.add('pe');
+  root.innerHTML = '<div class="pieces"></div><div class="pe-foot"><button type="button" class="btn sm pe-add">+ เพิ่มเงื่อนไข</button><span class="pe-other">นอกเงื่อนไข = 0</span></div><p class="err pe-err" hidden></p>';
+  const list = root.querySelector('.pieces'), errEl = root.querySelector('.pe-err'), addBtn = root.querySelector('.pe-add');
+  function render(){
+    list.innerHTML = rows.map((r, i) => `<div class="piece" data-i="${i}">
+      <input type="text" data-f="expr" value="${esc(r.expr)}" aria-label="สูตรของเงื่อนไขที่ ${i + 1}" spellcheck="false" autocomplete="off" autocapitalize="off">
+      <div class="pe-cond"><span>เมื่อ</span><input type="text" data-f="a" value="${esc(r.a)}" placeholder="${opt.discrete ? '0' : '-inf'}" aria-label="ขอบล่างของเงื่อนไขที่ ${i + 1}" spellcheck="false" autocomplete="off"><span class="math">≤ ${v} ${rel}</span><input type="text" data-f="b" value="${esc(r.b)}" placeholder="${opt.discrete ? '5' : 'inf'}" aria-label="ขอบบนของเงื่อนไขที่ ${i + 1}" spellcheck="false" autocomplete="off">${rows.length > 1 ? `<button type="button" class="pe-del" data-del="${i}" aria-label="ลบเงื่อนไขที่ ${i + 1}">×</button>` : ''}</div>
+    </div>`).join('');
+    addBtn.disabled = rows.length >= 6;
+  }
+  function validate(){
+    const out = []; let first = null;
+    list.querySelectorAll('.piece').forEach((el, i) => {
+      const r = rows[i], ins = {expr: el.querySelector('[data-f=expr]'), a: el.querySelector('[data-f=a]'), b: el.querySelector('[data-f=b]')};
+      Object.values(ins).forEach(x => x.classList.remove('bad'));
+      let a = null, b = null;
+      try { parseExpr(r.expr, v); } catch(e){ ins.expr.classList.add('bad'); first = first || `เงื่อนไขที่ ${i + 1}: ${e.message}`; }
+      try { a = parseBound(r.a, -1, opt.discrete); } catch(e){ ins.a.classList.add('bad'); first = first || `เงื่อนไขที่ ${i + 1} ขอบล่าง: ${e.message}`; }
+      try { b = parseBound(r.b, 1, opt.discrete); } catch(e){ ins.b.classList.add('bad'); first = first || `เงื่อนไขที่ ${i + 1} ขอบบน: ${e.message}`; }
+      if (a != null && b != null && !(opt.discrete ? a <= b : a < b)){ ins.a.classList.add('bad'); ins.b.classList.add('bad'); first = first || `เงื่อนไขที่ ${i + 1}: ขอบล่างต้องน้อยกว่าขอบบน`; }
+      out.push({expr: r.expr.trim(), a, b});
+    });
+    errEl.hidden = !first; errEl.textContent = first || '';
+    return first ? null : out;
+  }
+  const emit = () => { const r = validate(); if (r) opt.onChange(r); };
+  list.addEventListener('input', e => { const el = e.target.closest('.piece'); if (!el || !e.target.dataset.f) return; rows[+el.dataset.i][e.target.dataset.f] = e.target.value; emit(); });
+  list.addEventListener('click', e => { const d = e.target.closest('[data-del]'); if (!d) return; rows.splice(+d.dataset.del, 1); render(); emit(); });
+  addBtn.addEventListener('click', () => {
+    const last = rows[rows.length - 1], lb = last ? last.b : '0';
+    const a = /inf/i.test(lb) || lb.trim() === '' ? '0' : lb;
+    const an = parseFloat(a);
+    rows.push({expr: '1', a, b: isFinite(an) ? String(an + (opt.discrete ? 2 : 1)) : '1'});
+    render(); emit();
+    const inp = list.querySelector('.piece:last-child [data-f=expr]'); if (inp){ inp.focus(); inp.select(); }
+  });
+  return { set(pcs){ rows = pcs.map(q => ({expr: q.expr, a: bstr(q.a), b: bstr(q.b)})); render(); validate(); } };
+}
+
+/* ---------- plot primitive ---------- */
+class Plot {
+  constructor(cv){ this.cv = cv; this.ctx = cv.getContext('2d'); this.h0 = +cv.dataset.h || 200; this.pad = {l:44, r:16, t:20, b:26}; }
+  size(){
+    const w = this.cv.clientWidth; if (!w) return false;
+    const H = Math.round(this.h0 * (w < 520 ? .82 : 1));
+    const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    const W = Math.round(w * dpr), HH = Math.round(H * dpr);
+    if (this.cv.width !== W || this.cv.height !== HH){ this.cv.width = W; this.cv.height = HH; }
+    this.cv.style.height = H + 'px';
+    this.w = w; this.H = H;
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    this.ctx.clearRect(0, 0, w, H);
+    return true;
+  }
+  view(x0, x1, y0, y1){ this.x0 = x0; this.x1 = x1; this.y0 = y0; this.y1 = y1; }
+  get L(){ return this.pad.l; } get R(){ return this.w - this.pad.r; }
+  get T(){ return this.pad.t; } get B(){ return this.H - this.pad.b; }
+  pw(){ return this.R - this.L; }
+  X(v){ return this.L + (v - this.x0) / (this.x1 - this.x0) * this.pw(); }
+  Y(v){ return this.T + (this.y1 - v) / (this.y1 - this.y0) * (this.B - this.T); }
+  inv(px){ return this.x0 + (px - this.L) / this.pw() * (this.x1 - this.x0); }
+  frame(o){
+    const c = this.ctx; c.save();
+    c.lineWidth = 1; c.strokeStyle = C.grid; c.beginPath();
+    for (let i = Math.ceil(this.x0 / o.grid - 1e-9); i * o.grid <= this.x1 + 1e-9; i++){ const px = Math.round(this.X(i * o.grid)) + .5; c.moveTo(px, this.T); c.lineTo(px, this.B); }
+    const ys = niceStep(this.y1 - this.y0, o.yt || 4);
+    for (let i = Math.ceil(this.y0 / ys - 1e-9); i * ys <= this.y1 + 1e-9; i++){ const py = Math.round(this.Y(i * ys)) + .5; c.moveTo(this.L, py); c.lineTo(this.R, py); }
+    c.stroke();
+    c.strokeStyle = C.axis; c.beginPath();
+    const p0 = Math.round(this.Y(0)) + .5; c.moveTo(this.L, p0); c.lineTo(this.R, p0);
+    if (this.x0 < 0 && this.x1 > 0){ const q = Math.round(this.X(0)) + .5; c.moveTo(q, this.T); c.lineTo(q, this.B); }
+    c.stroke();
+    c.fillStyle = C.muted; c.font = '11px "IBM Plex Mono", ui-monospace, monospace';
+    c.textAlign = 'center'; c.textBaseline = 'top';
+    for (let i = Math.ceil(this.x0 / o.tick - 1e-9); i * o.tick <= this.x1 + 1e-9; i++) c.fillText(fmt(i * o.tick, 2), this.X(i * o.tick), this.B + 8);
+    c.textAlign = 'right'; c.textBaseline = 'middle';
+    for (let i = Math.ceil(this.y0 / ys - 1e-9); i * ys <= this.y1 + 1e-9; i++) c.fillText(fmt(i * ys, 2), this.L - 8, this.Y(i * ys));
+    if (o.xl){ c.font = 'italic 14px "STIX Two Text", "Times New Roman", serif'; c.fillStyle = C.ink; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(o.xl, this.R + 3, this.Y(0)); }
+    c.restore();
+  }
+  clip(){ const c = this.ctx; c.save(); c.beginPath(); c.rect(this.L, this.T - 6, this.pw(), this.B - this.T + 12); c.clip(); }
+  unclip(){ this.ctx.restore(); }
+  band(a, b, col, al){ const c = this.ctx; c.save(); c.globalAlpha = al; c.fillStyle = col; const x0 = Math.max(this.L, this.X(a)), x1 = Math.min(this.R, this.X(b)); if (x1 > x0) c.fillRect(x0, this.T, x1 - x0, this.B - this.T); c.restore(); }
+  vline(x, col, label){
+    const c = this.ctx, px = Math.round(this.X(x)) + .5; if (px < this.L - 1 || px > this.R + 1) return;
+    c.save(); c.strokeStyle = col; c.lineWidth = 1.2; c.setLineDash([4, 4]); c.beginPath(); c.moveTo(px, this.T - 2); c.lineTo(px, this.B); c.stroke(); c.setLineDash([]);
+    if (label){ c.fillStyle = col; c.font = '500 11.5px "IBM Plex Mono", monospace'; c.textBaseline = 'bottom'; const right = px > this.R - 70; c.textAlign = right ? 'right' : 'left'; c.fillText(label, px + (right ? -5 : 5), this.T - 3); }
+    c.restore();
+  }
+  dot(k, col, al){ const c = this.ctx; c.save(); c.globalAlpha = al; c.fillStyle = col; c.beginPath(); c.arc(this.X(k), this.Y(0), 2.2, 0, Math.PI * 2); c.fill(); c.restore(); }
+  stem(k, v, col, o){
+    o = o || {}; const c = this.ctx; const px = this.X(k) + (o.dx || 0), p0 = this.Y(0), p1 = this.Y(v);
+    c.save(); c.globalAlpha = o.alpha == null ? 1 : o.alpha; c.strokeStyle = col; c.fillStyle = col; c.lineWidth = o.w || 2.2;
+    if (Math.abs(v) > 1e-12){ c.beginPath(); c.moveTo(px, p0); c.lineTo(px, p1); c.stroke(); }
+    c.beginPath(); c.arc(px, p1, o.r || 4, 0, Math.PI * 2); c.fill();
+    if (o.ring){ c.strokeStyle = o.ring; c.lineWidth = 2; c.beginPath(); c.arc(px, p1, (o.r || 4) + 4, 0, Math.PI * 2); c.stroke(); }
+    if (o.label != null){
+      c.font = '600 11px "IBM Plex Mono", monospace'; c.textAlign = o.align || 'center';
+      const up = v >= 0; c.textBaseline = up ? 'bottom' : 'top';
+      c.fillText(o.label, px + (o.ldx || 0), up ? p1 - 7 : p1 + 7);
+    }
+    c.restore();
+  }
+  curve(pts, col, w, dash, al){
+    if (!pts.length) return; const c = this.ctx; this.clip();
+    c.globalAlpha = al == null ? 1 : al; c.strokeStyle = col; c.lineWidth = w; c.lineJoin = 'round'; c.lineCap = 'round';
+    if (dash) c.setLineDash(dash);
+    const yc = v => Math.max(-4000, Math.min(4000, this.Y(v)));
+    c.beginPath(); pts.forEach((p, i) => { const X = this.X(p[0]), Y = yc(p[1]); i ? c.lineTo(X, Y) : c.moveTo(X, Y); }); c.stroke();
+    this.unclip();
+  }
+  area(pts, col, al){
+    if (!pts.length) return; const c = this.ctx; this.clip();
+    const yc = v => Math.max(-4000, Math.min(4000, this.Y(v)));
+    c.globalAlpha = al; c.fillStyle = col; c.beginPath(); c.moveTo(this.X(pts[0][0]), this.Y(0));
+    pts.forEach(p => c.lineTo(this.X(p[0]), yc(p[1]))); c.lineTo(this.X(pts[pts.length - 1][0]), this.Y(0)); c.closePath(); c.fill();
+    this.unclip();
+  }
+  point(x, y, col, ring){ const c = this.ctx; c.save(); c.fillStyle = col; c.beginPath(); c.arc(this.X(x), this.Y(y), 5, 0, Math.PI * 2); c.fill(); if (ring){ c.strokeStyle = ring; c.lineWidth = 2; c.beginPath(); c.arc(this.X(x), this.Y(y), 9, 0, Math.PI * 2); c.stroke(); } c.restore(); }
+  text(s, x, y, col, font, align, base){ const c = this.ctx; c.save(); c.fillStyle = col; c.font = font; c.textAlign = align || 'center'; c.textBaseline = base || 'middle'; c.fillText(s, x, y); c.restore(); }
+}
+
+function attachDrag(cv, plot, cb){
+  cv.addEventListener('pointerdown', e => { try { cv.setPointerCapture(e.pointerId); } catch(_){} cb(plot.inv(e.offsetX)); });
+  cv.addEventListener('pointermove', e => { if (cv.hasPointerCapture && cv.hasPointerCapture(e.pointerId)) cb(plot.inv(e.offsetX)); });
+}
+
+let active = 'd', raf = 0;
+function kick(){ if (!raf) raf = requestAnimationFrame(frame); }
+function frame(now){
+  raf = 0;
+  const bd = dStep(now), bc = cStep(now);
+  if (active === 'd') dDraw(); else cDraw();
+  if (bd || bc) raf = requestAnimationFrame(frame);
+}
+function runQueue(S, now){
+  const g = S.q[0];
+  if (g.t0 == null){ g.t0 = now; if (g.prop && g.from == null) g.from = S[g.prop]; }
+  const p = g.dur > 0 ? Math.min(1, (now - g.t0) / g.dur) : 1;
+  if (g.prop) S[g.prop] = g.from + (g.to - g.from) * ease(p);
+  S.step = g.step == null ? null : g.step;
+  if (p >= 1){ if (g.prop) S[g.prop] = g.to; S.q.shift(); if (!S.q.length){ S.step = null; S.hold = now + 800; } }
+}
+const dur = ms => RM.matches ? 0 : ms;
+
+/* =====================================================================
+   DISCRETE
+   ===================================================================== */
+const DPRE = {
+  ex21:  {label:'Exercise 2.1 (สไลด์ 52–55)', x:{mode:'list', list:'1, 3, -1, -2', start:0}, h:{mode:'list', list:'1, 2, 0, -1, 1', start:0}, n:2,
+          note:'คำตอบในสไลด์: y[n] = {1, 5, 5, −5, −6, 4, 1, −2} เริ่มที่ n = 0'},
+  ex22:  {label:'Exercise 2.2 · αⁿu[n] ∗ βⁿu[n] (ใช้สูตร)', x:{mode:'formula', pieces:[{expr:'(1/2)^n', a:0, b:5}]}, h:{mode:'formula', pieces:[{expr:'(1/3)^n', a:0, b:5}]}, n:2,
+          note:'α = 1/2, β = 1/3 ตัดไว้ที่ 0 ≤ n ≤ 5 — y[0]…y[5] ตรงกับคำตอบ (βⁿ⁺¹ − αⁿ⁺¹)/(β − α) (ค่าหลังจากนั้นเพี้ยนเพราะตัดสัญญาณ)'},
+  pw:    {label:'สูตร + เงื่อนไข (ลองแก้เอง)', x:{mode:'formula', pieces:[{expr:'n', a:0, b:3}, {expr:'6 - n', a:4, b:6}]}, h:{mode:'formula', pieces:[{expr:'1', a:0, b:1}]}, n:3,
+          note:'x[n] = n เมื่อ 0 ≤ n ≤ 3 และ 6 − n เมื่อ 4 ≤ n ≤ 6 — แก้สูตรหรือขอบเขตในกล่องด้านล่างได้เลย'},
+  ma2:   {label:'ค่าเฉลี่ยเคลื่อนที่ 2 จุด', x:{mode:'list', list:'2, 4, 6, 2, 4', start:0}, h:{mode:'list', list:'0.5, 0.5', start:0}, n:2,
+          note:'h[n] = ½(δ[n] + δ[n − 1]) — y[n] คือค่าเฉลี่ยของ x[n] กับ x[n − 1] (moving average ในสไลด์ 42)'},
+  delta: {label:'h[n] = δ[n] (ระบบเอกลักษณ์)', x:{mode:'list', list:'1, 3, -1, -2', start:0}, h:{mode:'list', list:'1', start:0}, n:1,
+          note:'x ∗ δ = x — เอาต์พุตเหมือนอินพุตทุกจุด (สไลด์ 58)'},
+  shift: {label:'h[n] = δ[n − 2] (หน่วงเวลา)', x:{mode:'list', list:'1, 3, -1, -2', start:0}, h:{mode:'list', list:'1', start:2}, n:3,
+          note:'x ∗ δ[n − 2] = x[n − 2] — เอาต์พุตคือ x ที่เลื่อนไปทางขวา 2 ตำแหน่ง'},
+  box:   {label:'พัลส์ ∗ พัลส์', x:{mode:'list', list:'1, 1, 1, 1, 1', start:0}, h:{mode:'list', list:'1, 1, 1', start:0}, n:3,
+          note:'ผลลัพธ์เป็นรูปสี่เหลี่ยมคางหมู: ขึ้น → คงที่ (ซ้อนทับเต็ม) → ลง'}
+};
+const DSIG = {
+  x: {mode:'list', pieces:[{expr:'(1/2)^n', a:0, b:5}]},
+  h: {mode:'list', pieces:[{expr:'1', a:0, b:2}]}
+};
+const D = {x:[], xs:0, h:[], hs:0, n:0, s:0, flip:1, q:[], playing:false, hold:0, step:null, eqKey:'', rowN:null};
+const PA = new Plot($('#d-pa')), PB = new Plot($('#d-pb')), PCd = new Plot($('#d-pc'));
+const xAt = k => (k >= D.xs && k <= D.xe) ? D.x[k - D.xs] : 0;
+const hAt = m => (m >= D.hs && m <= D.he) ? D.h[m - D.hs] : 0;
+const yAt = n => (n >= D.ys && n <= D.ye) ? D.y[n - D.ys] : 0;
+
+function parseSeq(str){
+  const s = String(str).replace(/[−–]/g, '-').replace(/[{}\[\]()]/g, ' ');
+  const parts = s.split(/[\s,;]+/).filter(Boolean);
+  if (!parts.length || parts.length > 20) return null;
+  const nums = parts.map(Number);
+  return nums.some(v => !isFinite(v)) ? null : nums;
+}
+function genDiscrete(pieces){
+  const pcs = pieces.map(q => { const ast = parseExpr(q.expr, 'n'); return {expr: q.expr, a: q.a, b: q.b, ast, fn: compileAst(ast)}; });
+  const lo = Math.min(...pcs.map(q => q.a)), hi = Math.max(...pcs.map(q => q.b));
+  if (lo < -15 || hi > 25) throw new Error('ขอบเขตของ n ต้องอยู่ระหว่าง −15 ถึง 25');
+  if (hi - lo + 1 > 20) throw new Error(`ช่วง n ยาว ${hi - lo + 1} จุด — จำกัดไม่เกิน 20 จุด`);
+  const vals = [];
+  for (let n = lo; n <= hi; n++){
+    const q = pcs.find(q => n >= q.a && n <= q.b);
+    let v = q ? q.fn(n) : 0;
+    if (!isFinite(v)) throw new Error(`ค่าที่ n = ${n} หาไม่ได้ (เช่น หารด้วยศูนย์)`);
+    if (Math.abs(v) < 1e-12) v = 0;
+    vals.push(+v.toPrecision(12));
+  }
+  return {vals, start: lo, pcs};
+}
+function dSetData(x, xs, h, hs, n){
+  Object.assign(D, {x, xs, h, hs});
+  D.N = x.length; D.M = h.length; D.xe = xs + D.N - 1; D.he = hs + D.M - 1;
+  D.ys = xs + hs; D.ye = D.xe + D.he;
+  D.y = new Array(D.N + D.M - 1).fill(0);
+  for (let i = 0; i < D.N; i++) for (let j = 0; j < D.M; j++) D.y[i + j] += x[i] * h[j];
+  D.y = D.y.map(v => Math.abs(v) < 1e-12 ? 0 : +v.toPrecision(12));
+  D.nMin = D.ys - 1; D.nMax = D.ye + 1;
+  D.k0 = Math.min(D.xs, D.nMin - D.he, D.hs, -D.he);
+  D.k1 = Math.max(D.xe, D.nMax - D.hs, D.he, -D.hs);
+  const va = [0].concat(x, h); D.rA = rng(Math.min(...va), Math.max(...va));
+  const pr = [0]; x.forEach(a => h.forEach(b => pr.push(a * b))); D.rB = rng(Math.min(...pr), Math.max(...pr));
+  const yv = [0].concat(D.y); D.rC = rng(Math.min(...yv), Math.max(...yv));
+  const sl = $('#d-n'); sl.min = D.nMin; sl.max = D.nMax;
+  D.n = Math.max(D.nMin, Math.min(D.nMax, n == null ? D.n : n));
+  sl.value = D.n; D.s = D.n; D.flip = 1; D.q = []; D.eqKey = ''; D.rowN = null;
+  $('#d-facts').innerHTML = `ความยาว <span class="math">x</span>: <b>N = ${D.N}</b> · <span class="math">h</span>: <b>M = ${D.M}</b><br>→ <span class="math">y</span> มี <b>M + N − 1 = ${D.N + D.M - 1}</b> จุด ตั้งแต่ <span class="math">n</span> = <b>${fmt(D.ys)}</b> ถึง <b>${fmt(D.ye)}</b>`;
+  dTable(); kick();
+}
+function dSigKey(s){
+  if (s.mode === 'list') return 'L|' + String(parseSeq(s.list)) + '|' + s.start;
+  return 'F|' + JSON.stringify(s.pieces.map(q => [q.expr.replace(/\s/g, ''), q.a, q.b]));
+}
+function dModeUI(w){
+  const f = DSIG[w].mode === 'formula';
+  $('#d-' + w + '-list').hidden = f; $('#d-' + w + '-pe').hidden = !f;
+  $('#d-' + w + '-tex').hidden = !f; $('#d-' + w + '-vals').hidden = !f;
+  document.querySelectorAll(`.seg button[data-sig="${w}"]`).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === DSIG[w].mode)));
+}
+function dSetMode(w, mode){
+  const s = DSIG[w]; if (s.mode === mode) return;
+  if (mode === 'formula') dPE[w].set(s.pieces);
+  else { try { const g = genDiscrete(s.pieces); $('#d-' + w).value = g.vals.map(v => String(+v.toFixed(4))).join(', '); $('#d-' + w + 's').value = g.start; } catch(_){} }
+  s.mode = mode; dModeUI(w); dRead();
+}
+function dRead(n){
+  const res = {};
+  ['x', 'h'].forEach(w => {
+    const s = DSIG[w], err = $('#d-' + w + '-err'); err.hidden = true;
+    if (s.mode === 'list'){
+      s.list = $('#d-' + w).value; s.start = parseInt($('#d-' + w + 's').value, 10);
+      const vals = parseSeq(s.list);
+      $('#d-' + w).classList.toggle('bad', !vals);
+      if (!vals){ err.textContent = 'ใส่ตัวเลข 1–20 ค่า คั่นด้วยจุลภาค เช่น 1, 2, 0, -1'; err.hidden = false; return; }
+      if (!Number.isInteger(s.start) || Math.abs(s.start) > 15){ err.textContent = 'ตำแหน่งเริ่มต้องเป็นจำนวนเต็มระหว่าง −15 ถึง 15'; err.hidden = false; return; }
+      res[w] = {vals, start: s.start};
+    } else {
+      try {
+        const g = genDiscrete(s.pieces); res[w] = g;
+        $('#d-' + w + '-tex').innerHTML = `${w}[n] = ${piecesPretty(g.pcs, 'n', true)}`;
+        $('#d-' + w + '-vals').textContent = `= {${g.vals.map(v => fmt(v, 4)).join(', ')}} เริ่มที่ n = ${fmt(g.start)}`;
+      } catch(e){ err.textContent = e.message; err.hidden = false; }
+    }
+  });
+  if (!res.x || !res.h) return;
+  let match = 'custom';
+  for (const k in DPRE){ if (dSigKey(DPRE[k].x) === dSigKey(DSIG.x) && dSigKey(DPRE[k].h) === dSigKey(DSIG.h)) match = k; }
+  $('#d-preset').value = match;
+  $('#d-note').textContent = match === 'custom' ? 'สัญญาณที่กำหนดเอง — กราฟและตารางคำนวณใหม่ทันที' : DPRE[match].note;
+  dSetData(res.x.vals, res.x.start, res.h.vals, res.h.start, n);
+}
+function dApplyPreset(key){
+  const p = DPRE[key]; if (!p) return;
+  ['x', 'h'].forEach(w => {
+    const s = p[w], S = DSIG[w]; S.mode = s.mode;
+    if (s.mode === 'list'){ $('#d-' + w).value = s.list; $('#d-' + w + 's').value = s.start; }
+    else { S.pieces = s.pieces.map(q => Object.assign({}, q)); dPE[w].set(S.pieces); }
+    dModeUI(w);
+  });
+  dRead(p.n);
+}
+function dGo(n){
+  n = Math.max(D.nMin, Math.min(D.nMax, Math.round(n)));
+  if (n === D.n && D.flip === 1 && Math.abs(D.s - n) < 1e-9 && !D.q.length) return;
+  D.n = n; $('#d-n').value = n; D.flip = 1;
+  D.q = [{prop:'s', from:D.s, to:n, dur:dur(Math.min(650, 240 + 110 * Math.abs(n - D.s)))}];
+  kick();
+}
+function dPlay(on){
+  if (on && D.n >= D.nMax){ D.n = D.nMin; D.s = D.nMin; $('#d-n').value = D.nMin; }
+  D.playing = on; D.hold = performance.now() + (on ? 300 : 0);
+  const b = $('#d-play'); b.innerHTML = on ? ICON_PAUSE : ICON_PLAY; b.setAttribute('aria-label', on ? 'หยุด' : 'เล่นอัตโนมัติ');
+  kick();
+}
+function dDemo(){
+  dPlay(false);
+  D.flip = 0; D.s = 0;
+  D.q = [
+    {dur:dur(600), step:0},
+    {prop:'flip', from:0, to:1, dur:dur(1100), step:0},
+    {dur:dur(350), step:0},
+    {prop:'s', from:0, to:D.n, dur:dur(500 + 160 * Math.abs(D.n)), step:1},
+    {dur:dur(1000), step:2},
+    {dur:dur(1000), step:3}
+  ];
+  kick();
+}
+function dStep(now){
+  if (D.q.length){ runQueue(D, now); return true; }
+  if (D.playing){
+    if (now >= D.hold){ if (D.n >= D.nMax){ dPlay(false); return false; } dGo(D.n + 1); }
+    return true;
+  }
+  return false;
+}
+function dSteady(){ return D.flip === 1 && Math.abs(D.s - D.n) < 1e-9; }
+
+function dEqHTML(){
+  const n = D.n, lo = Math.max(D.xs, n - D.he), hi = Math.min(D.xe, n - D.hs);
+  let body = `<div class="eq-l sym"><span class="math">y[${fmt(n)}] = </span>${bigop('Σ', '<span class="math">k</span>', '')}<span class="math">x[k] · h[${nExpr(n)}]</span></div>`;
+  if (lo > hi){
+    return `<div class="eq-body">${body}<div class="eq-case"><span class="math">h[${nExpr(n)}]</span> ยังไม่ซ้อนทับกับ <span class="math">x[k]</span> → ผลคูณเป็น 0 ทุกตำแหน่ง</div></div><div class="eq-r">y[${fmt(n)}] = 0</div>`;
+  }
+  const sym = [], num = []; let sum = 0;
+  for (let k = lo; k <= hi; k++){
+    const a = xAt(k), b = hAt(n - k); sum += a * b;
+    sym.push(`x[${fmt(k)}]h[${fmt(n - k)}]`);
+    num.push(`${fmtP(a, 4)}·${fmtP(b, 4)}`);
+  }
+  body = `<div class="eq-l sym"><span class="math">y[${fmt(n)}] = </span>${bigop('Σ', `<span class="math">k=${fmt(lo)}</span>`, `<span class="math">${fmt(hi)}</span>`)}<span class="math">x[k] · h[${nExpr(n)}]</span></div>`
+       + `<div class="eq-l math">= ${sym.join(' + ')}</div>`
+       + `<div class="eq-l math">= ${num.join(' + ')}</div>`;
+  return `<div class="eq-body">${body}</div><div class="eq-r">= ${fmt(sum, 4)}</div>`;
+}
+function dTable(){
+  const k0 = D.xs - (D.M - 1), k1 = D.xe + (D.M - 1);
+  const cols = []; for (let k = k0; k <= k1; k++) cols.push(k);
+  let html = '<table><thead><tr><th scope="col" style="text-align:left;padding-left:14px">k</th>' + cols.map(k => `<th scope="col">${fmt(k)}</th>`).join('') + '<th class="res" scope="col">ผลรวมของผลคูณ</th></tr></thead><tbody>';
+  html += '<tr class="xrow"><th scope="row">x[k]</th>' + cols.map(k => (k >= D.xs && k <= D.xe) ? `<td>${fmt(xAt(k), 3)}</td>` : '<td></td>').join('') + '<td class="res">← x[n]</td></tr>';
+  for (let n = D.ys; n <= D.ye; n++){
+    html += `<tr data-n="${n}" tabindex="0"><th scope="row">y[${fmt(n)}]</th>`;
+    const prods = [];
+    cols.forEach(k => {
+      const m = n - k;
+      if (m >= D.hs && m <= D.he){
+        const ov = k >= D.xs && k <= D.xe; if (ov) prods.push(xAt(k) * hAt(m));
+        html += `<td class="hv${ov ? ' ov' : ''}${m === 0 ? ' h0' : ''}">${fmt(hAt(m), 3)}</td>`;
+      } else html += '<td></td>';
+    });
+    const y = yAt(n);
+    const terms = prods.map((v, i) => i === 0 ? fmt(v, 3) : (v < 0 ? ' − ' + fmt(-v, 3) : ' + ' + fmt(v, 3))).join('');
+    html += `<td class="res">${prods.length > 1 ? '= ' + terms + ' ' : ''}= <b>${fmt(y, 4)}</b></td></tr>`;
+  }
+  html += '</tbody></table>';
+  const box = $('#d-table'); box.innerHTML = html;
+  box.querySelectorAll('tr[data-n]').forEach(tr => {
+    const go = () => { dPlay(false); dGo(+tr.dataset.n); };
+    tr.addEventListener('click', go);
+    tr.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); go(); } });
+  });
+}
+
+function dDraw(){
+  if (!PA.size()) return;
+  const n = D.n, s = D.s, st = dSteady();
+  const lo = Math.max(D.xs, n - D.he), hi = Math.min(D.xe, n - D.hs);
+  const aligned = D.flip === 1 && Math.abs(s - Math.round(s)) < 1e-9;
+  const rs = Math.round(s);
+
+  PA.view(D.k0 - .7, D.k1 + .7, D.rA[0], D.rA[1]);
+  const pxu = PA.pw() / (PA.x1 - PA.x0), tick = pxu >= 18 ? 1 : pxu >= 9 ? 2 : 5;
+  PA.frame({grid:1, tick, yt:4, xl:'k'});
+  if (st && lo <= hi) PA.band(lo - .42, hi + .42, C.prod, .10);
+  if (D.flip === 1) PA.vline(s, C.mark, st ? 'k = n = ' + fmt(n) : 'k = n');
+  for (let k = Math.ceil(PA.x0); k <= Math.floor(PA.x1); k++){
+    if (k < D.xs || k > D.xe){ PA.dot(k, C.axis, .9); continue; }
+    const v = xAt(k), share = aligned && k >= rs - D.he && k <= rs - D.hs;
+    PA.stem(k, v, C.x, {dx: share ? -3 : 0, label: v ? fmt(v, 2) : null, align: share ? 'right' : 'center', ldx: share ? -1 : 0});
+  }
+  const f = 1 - 2 * D.flip, showHL = aligned || D.flip === 0;
+  for (let m = D.hs; m <= D.he; m++){
+    const pos = f * m + s, v = hAt(m), k = Math.round(pos);
+    const share = aligned && k >= D.xs && k <= D.xe;
+    PA.stem(pos, v, m === 0 ? C.mark : C.h, {dx: share ? 3 : 0, label: showHL && v ? fmt(v, 2) : null, align: share ? 'left' : 'center', ldx: share ? 1 : 0});
+  }
+  if (D.flip < 1 || !aligned){
+    const lbl = D.flip === 0 ? 'h[k] (ก่อนพลิก)' : D.flip < 1 ? 'กำลังพลิก…' : 'กำลังเลื่อน…';
+    PA.text(lbl, PA.L + 6, PA.T + 8, C.h, '500 12px "IBM Plex Sans Thai", sans-serif', 'left');
+  }
+
+  PB.size(); PB.view(PA.x0, PA.x1, D.rB[0], D.rB[1]);
+  PB.frame({grid:1, tick, yt:3, xl:'k'});
+  if (st){
+    if (lo <= hi){
+      PB.band(lo - .42, hi + .42, C.prod, .10);
+      for (let k = lo; k <= hi; k++){ const v = xAt(k) * hAt(n - k); PB.stem(k, v, C.prod, {label: fmt(v, 2)}); }
+    } else PB.text('ไม่มีจุดที่ซ้อนทับ → ผลคูณเป็น 0 ทุกตำแหน่ง', (PB.L + PB.R) / 2, PB.T + 14, C.muted, '13px "IBM Plex Sans Thai", sans-serif');
+  }
+
+  PCd.size(); PCd.view(D.nMin - .7, D.nMax + .7, D.rC[0], D.rC[1]);
+  const pxu2 = PCd.pw() / (PCd.x1 - PCd.x0);
+  PCd.frame({grid:1, tick: pxu2 >= 18 ? 1 : pxu2 >= 9 ? 2 : 5, yt:3, xl:'n'});
+  const done = st ? n : (D.flip < 1 ? -Infinity : Math.min(n - 1, Math.floor(s + 1e-9)));
+  if (D.flip === 1) PCd.vline(s, C.mark, null);
+  for (let m = D.nMin; m <= D.nMax; m++){
+    if (m <= done){ const v = yAt(m); PCd.stem(m, v, C.y, {label: fmt(v, 2), ring: (st && m === n) ? C.mark : null}); }
+    else PCd.dot(m, C.axis, .9);
+  }
+
+  const key = (st ? 'S' : 'M') + n;
+  if (key !== D.eqKey){
+    D.eqKey = key;
+    const eq = $('#d-eq'); eq.innerHTML = dEqHTML(); eq.classList.toggle('dim', !st);
+    $('#d-nval').textContent = fmt(n);
+    $('#d-s2').textContent = `h[−k] → h[${nExpr(n)}]`;
+    if (D.rowN !== n){
+      D.rowN = n;
+      document.querySelectorAll('#d-table tr[data-n]').forEach(tr => tr.classList.toggle('cur', +tr.dataset.n === n));
+    }
+  }
+  document.querySelectorAll('#d-steps li').forEach((li, i) => li.classList.toggle('on', D.step === i));
+}
+
+/* =====================================================================
+   CONTINUOUS
+   ===================================================================== */
+const ns = v => String(+(+v).toFixed(4));
+const SHAPES = {
+  rect:  {name:'rect(t/2a) — พัลส์สมมาตรกว้าง 2a', pk:'a', min:.25, max:3, step:.25, def:1,
+          pcs:p => [{expr:'1', a:-p, b:p}], tex:p => `rect(t / ${fmt(2*p)})`},
+  pulse: {name:'u(t) − u(t − T) — พัลส์เริ่มที่ 0', pk:'T', min:.25, max:4, step:.25, def:1,
+          pcs:p => [{expr:'1', a:0, b:p}], tex:p => `u(t) − u(t − ${fmt(p)})`},
+  exp:   {name:'e^(−at) u(t) — เอ็กซ์โปเนนเชียลลดลง', pk:'a', min:.25, max:5, step:.25, def:1,
+          pcs:p => [{expr: p === 1 ? 'e^(-t)' : `e^(-${ns(p)}t)`, a:0, b:Infinity}], tex:p => `e<sup>−${p === 1 ? '' : fmt(p)}t</sup> u(t)`},
+  ramp:  {name:'t/T, 0 ≤ t ≤ T — ramp', pk:'T', min:.5, max:4, step:.25, def:2,
+          pcs:p => [{expr:`t/${ns(p)}`, a:0, b:p}], tex:p => `t / ${fmt(p)},  0 ≤ t ≤ ${fmt(p)}`},
+  tri:   {name:'1 − |t|/a — สามเหลี่ยม', pk:'a', min:.25, max:3, step:.25, def:1,
+          pcs:p => p === 1 ? [{expr:'1 + t', a:-1, b:0}, {expr:'1 - t', a:0, b:1}] : [{expr:`1 + t/${ns(p)}`, a:-p, b:0}, {expr:`1 - t/${ns(p)}`, a:0, b:p}],
+          tex:p => `1 − |t|${p === 1 ? '' : ' / ' + fmt(p)},  |t| < ${fmt(p)}`},
+  step:  {name:'u(t) — unit step', pk:null, def:1, pcs:() => [{expr:'1', a:0, b:Infinity}], tex:() => 'u(t)'}
+};
+const pkey = (which, shape) => shape === 'exp' ? (which === 'x' ? 'b' : 'a') : SHAPES[shape].pk;
+const CPRE = {
+  ex25: {label:'Exercise 2.5 · rect ∗ rect', x:{mode:'shape', shape:'rect', p:1}, h:{mode:'shape', shape:'rect', p:1}, t:-0.8, note:'สไลด์ 62: rect(t/2a) ∗ rect(t/2a) ได้สามเหลี่ยมสูง 2a แบ่งคิด 4 ช่วง'},
+  ex23: {label:'Exercise 2.3 · e^(−bt)u(t) ∗ e^(−at)u(t)', x:{mode:'shape', shape:'exp', p:2}, h:{mode:'shape', shape:'exp', p:3}, t:0.6, note:'สไลด์ 59: h(t) = e^(−at)u(t), x(t) = e^(−bt)u(t) กับ a = 3, b = 2'},
+  ex26: {label:'Exercise 2.6 · Ae^(−t) ∗ t/T', x:{mode:'shape', shape:'exp', p:1}, h:{mode:'shape', shape:'ramp', p:2}, t:1.2, note:'สไลด์ 63: x(t) = Ae^(−t), h(t) = t/T บน [0, T] (ใช้ A = 1, T = 2) แบ่งคิด 3 ช่วง'},
+  step: {label:'x(t) ∗ u(t) = อินทิกรัลสะสม', x:{mode:'shape', shape:'rect', p:1}, h:{mode:'shape', shape:'step', p:1}, t:0.3, note:'สไลด์ 58: คอนโวลูชันกับ u(t) คือ ∫ x(τ)dτ จาก −∞ ถึง t'},
+  pw:   {label:'เขียนเงื่อนไขเอง (piecewise)', x:{mode:'custom', shape:'ramp', p:1, pieces:[{expr:'t', a:0, b:1}, {expr:'1', a:1, b:2}]}, h:{mode:'custom', shape:'pulse', p:1, pieces:[{expr:'2e^-2t', a:0, b:1.5}]}, t:1.3,
+         note:'x(t) มี 2 เงื่อนไข (ขึ้นแล้วคงที่) — ดูว่าช่วงที่ซ้อนทับคร่อมรอยต่อแล้วอินทิกรัลแยกเป็น 2 ก้อนอย่างไร ลองแก้สูตร/ขอบเขตได้เลย'},
+  tri:  {label:'สามเหลี่ยม ∗ พัลส์', x:{mode:'shape', shape:'tri', p:1}, h:{mode:'shape', shape:'pulse', p:1.5}, t:0.5, note:'สามเหลี่ยมถูกเขียนเป็น 2 เงื่อนไข จึงมีรอยต่อที่ t = 0 เพิ่มเข้ามา'}
+};
+const CT = {x:{mode:'shape', shape:'rect', p:1, pieces:[]}, h:{mode:'shape', shape:'rect', p:1, pieces:[]}, t:0, s:0, flip:1, q:[], playing:false, step:null, last:0, eqKey:'', iv:-1};
+const QA = new Plot($('#c-pa')), QB = new Plot($('#c-pb')), QC = new Plot($('#c-pc'));
+let X = null, H = null;
+
+function ranges(f, sup){
+  const a = sup[0], b = sup[1], SC = 600, DX = .1;
+  const A0 = isFinite(a) ? a : (isFinite(b) ? b : 0), B0 = isFinite(b) ? b : (isFinite(a) ? a : 0);
+  let mx = 0;
+  if (isFinite(a) && isFinite(b)) for (let i = 0; i <= 200; i++) mx = Math.max(mx, Math.abs(f(a + (b - a) * i / 200)));
+  const fw = isFinite(b) ? null : Array.from({length: SC + 1}, (_, i) => Math.abs(f(B0 + i * DX)));
+  const bw = isFinite(a) ? null : Array.from({length: SC + 1}, (_, i) => Math.abs(f(A0 - i * DX)));
+  [fw, bw].forEach(arr => arr && arr.forEach(v => { if (isFinite(v)) mx = Math.max(mx, v); }));
+  const cut = (arr, th) => { if (!mx) return 1; let last = -1; arr.forEach((v, i) => { if (v > th * mx) last = i; }); return last >= SC - 10 ? null : Math.max(.5, (last + 1) * DX); };
+  const vis = [a, b], eff = [a, b], drw = [a, b];
+  if (fw){ const cv = cut(fw, .01), ce = cut(fw, 1e-5); vis[1] = B0 + (cv == null ? 4 : cv); eff[1] = B0 + (ce == null ? 40 : ce); drw[1] = cv == null ? eff[1] : vis[1] + .3; }
+  if (bw){ const cv = cut(bw, .01), ce = cut(bw, 1e-5); vis[0] = A0 - (cv == null ? 4 : cv); eff[0] = A0 - (ce == null ? 40 : ce); drw[0] = cv == null ? eff[0] : vis[0] - .3; }
+  return {vis, eff, drw};
+}
+function compileSig(sig){
+  const raw = sig.mode === 'custom' ? sig.pieces : SHAPES[sig.shape].pcs(sig.p);
+  const pcs = raw.map(r => { const ast = parseExpr(r.expr, 't'); return {expr: r.expr, a: r.a, b: r.b, ast, fn: compileAst(ast)}; });
+  const S = {pcs, bad: false};
+  S.idx = x => { for (let i = 0; i < pcs.length; i++) if (x >= pcs[i].a && x < pcs[i].b) return i; return -1; };
+  S.f = x => { const i = S.idx(x); if (i < 0) return 0; const v = pcs[i].fn(x); if (isFinite(v)) return v; S.bad = true; return 0; };
+  S.sup = [Math.min(...pcs.map(q => q.a)), Math.max(...pcs.map(q => q.b))];
+  const bn = []; pcs.forEach(q => { if (isFinite(q.a)) bn.push(q.a); if (isFinite(q.b)) bn.push(q.b); });
+  S.bnds = uniq(bn);
+  Object.assign(S, ranges(S.f, S.sup));
+  return S;
+}
+/* split the overlap into pieces where both x(τ) and h(t−τ) use a single formula */
+function cSegs(t){
+  const ha = t - H.sup[1], hb = t - H.sup[0];
+  const LO = Math.max(X.sup[0], ha), HI = Math.min(X.sup[1], hb);
+  if (!(HI > LO + 1e-12)) return [];
+  const cuts = [
+    {v: LO, s: X.sup[0] >= ha ? fmt(X.sup[0], 3) : tExpr(-H.sup[1])},
+    {v: HI, s: X.sup[1] <= hb ? fmt(X.sup[1], 3) : tExpr(-H.sup[0])}
+  ];
+  X.bnds.forEach(b => { if (b > LO + 1e-9 && b < HI - 1e-9) cuts.push({v: b, s: fmt(b, 3)}); });
+  H.bnds.forEach(c => { const b = t - c; if (b > LO + 1e-9 && b < HI - 1e-9 && !cuts.some(q => Math.abs(q.v - b) < 1e-9)) cuts.push({v: b, s: tExpr(-c)}); });
+  cuts.sort((p, q) => p.v - q.v);
+  const eLo = Math.max(X.eff[0], t - H.eff[1]), eHi = Math.min(X.eff[1], t - H.eff[0]);
+  const segs = [];
+  for (let k = 0; k + 1 < cuts.length; k++){
+    const A = cuts[k], B = cuts[k + 1];
+    const mid = isFinite(A.v) && isFinite(B.v) ? (A.v + B.v) / 2 : isFinite(A.v) ? A.v + 1 : isFinite(B.v) ? B.v - 1 : 0;
+    const i = X.idx(mid), j = H.idx(t - mid); if (i < 0 || j < 0) continue;
+    const lo = Math.max(A.v, eLo), hi = Math.min(B.v, eHi); if (!(hi > lo)) continue;
+    segs.push({lo, hi, loT: A.v, hiT: B.v, loSym: A.s, hiSym: B.s, i, j, v: 0});
+  }
+  return segs;
+}
+function cY(t, track){
+  const segs = cSegs(t); let v = 0;
+  segs.forEach(sg => {
+    const xp = X.pcs[sg.i].fn, hp = H.pcs[sg.j].fn;
+    const g = u => { const r = xp(u) * hp(t - u); return isFinite(r) ? r : 0; };
+    const w = sg.hi - sg.lo, N = Math.min(600, Math.max(40, 2 * Math.ceil(w / .04)));
+    const hh = w / N, e = Math.min(1e-9, hh * 1e-3);
+    const ga = g(sg.lo + e), gb = g(sg.hi - e);
+    let s = ga + gb;
+    for (let i = 1; i < N; i++){ const val = g(sg.lo + i * hh); s += (i % 2 ? 4 : 2) * val; if (track){ if (val > CT.gHi) CT.gHi = val; if (val < CT.gLo) CT.gLo = val; } }
+    if (track){ CT.gHi = Math.max(CT.gHi, ga, gb); CT.gLo = Math.min(CT.gLo, ga, gb); }
+    sg.v = s * hh / 3; v += sg.v;
+  });
+  return {v, segs};
+}
+function cIv(t){ let i = 0; CT.bp.forEach(b => { if (t >= b - 1e-9) i++; }); return i; }
+function cCond(i){
+  const bp = CT.bp;
+  if (!bp.length) return 'ทุกค่า t';
+  if (i === 0) return `t &lt; ${fmt(bp[0], 3)}`;
+  if (i === bp.length) return `t ≥ ${fmt(bp[bp.length - 1], 3)}`;
+  return `${fmt(bp[i - 1], 3)} ≤ t &lt; ${fmt(bp[i], 3)}`;
+}
+function integrandHTML(sg, tsub){
+  const xa = X.pcs[sg.i].ast, ha = H.pcs[sg.j].ast;
+  const XP = pretty(xa, {h: 'τ', p: PR.atom}), HP = pretty(ha, {h: `${tsub} − τ`, p: PR.add});
+  const w = r => r.p <= PR.add ? `(${r.h})` : r.h;
+  if (isOne(xa) && isOne(ha)) return '1';
+  if (isOne(xa)) return w(HP);
+  if (isOne(ha)) return w(XP);
+  return `${w(XP)}·${w(HP)}`;
+}
+const segSym = sg => `${bigop('∫', sg.loSym, sg.hiSym)}${integrandHTML(sg, 't')} dτ`;
+const bnum = v => isFinite(v) ? fx2(v) : fmt(v);
+
+function cSetData(t){
+  try { X = compileSig(CT.x); H = compileSig(CT.h); } catch(e){ return; }
+  let L = Math.min(X.vis[0], H.vis[0], X.vis[0] + H.vis[0]) - 1;
+  let R = Math.max(X.vis[1], H.vis[1], X.vis[1] + H.vis[1]) + 1;
+  if (R - L > 16) R = L + 16;
+  L = Math.floor(L * 2) / 2; R = Math.ceil(R * 2) / 2; CT.L = L; CT.R = R;
+  CT.hs0 = Math.max(H.drw[0], Math.min(L - R, L)) - .3; CT.hs1 = Math.min(H.drw[1], Math.max(R - L, R)) + .3;
+  let mn = 0, mx = 0;
+  for (let i = 0; i <= 500; i++){
+    const a = X.f(L + (R - L) * i / 500), b = H.f(CT.hs0 + (CT.hs1 - CT.hs0) * i / 500);
+    mn = Math.min(mn, a, b); mx = Math.max(mx, a, b);
+  }
+  CT.rA = rng(mn, mx);
+  CT.gHi = 0; CT.gLo = 0; CT.curve = []; let ymin = 0, ymax = 0;
+  for (let i = 0; i <= 480; i++){ const tt = L + (R - L) * i / 480, v = cY(tt, true).v; CT.curve.push([tt, v]); ymin = Math.min(ymin, v); ymax = Math.max(ymax, v); }
+  CT.rB = rng(CT.gLo, CT.gHi); CT.rC = rng(ymin, ymax);
+  const b = []; X.bnds.forEach(p => H.bnds.forEach(q => b.push(p + q)));
+  CT.bp = uniq(b);
+  const sl = $('#c-t'); sl.min = L; sl.max = R;
+  CT.t = Math.max(L, Math.min(R, t == null ? CT.t : t)); sl.value = CT.t;
+  CT.s = CT.t; CT.flip = 1; CT.q = []; CT.eqKey = ''; CT.iv = -1;
+  cSigUI(); cFormula(); cIntervals(); kick();
+}
+function cSigUI(){
+  ['x', 'h'].forEach(w => {
+    const st = CT[w], custom = st.mode === 'custom', S = SHAPES[st.shape];
+    $('#c-' + w + 'shape').value = custom ? 'custom' : st.shape;
+    $('#c-' + w + 'row').hidden = custom || !S.pk;
+    $('#c-' + w + 'pe').hidden = !custom;
+    if (!custom && S.pk){ const inp = $('#c-' + w + 'p'); inp.min = S.min; inp.max = S.max; inp.step = S.step; inp.value = st.p; $('#c-' + w + 'pl').textContent = `${pkey(w, st.shape)} = ${st.p.toFixed(2)}`; }
+    const comp = w === 'x' ? X : H;
+    $('#c-' + w + 'tex').innerHTML = `${w}(t) = ${custom ? piecesPretty(comp.pcs, 't', false) : S.tex(st.p)}`;
+    const warn = $('#c-' + w + 'warn'); warn.hidden = !comp.bad;
+    warn.textContent = comp.bad ? 'บางค่า t หาค่าไม่ได้ (เช่น หารด้วยศูนย์หรือรากของเลขลบ) — ถือเป็น 0' : '';
+  });
+}
+function cFormula(){
+  const x = CT.x, h = CT.h; let r = null;
+  const intU = v => `y(t) = ${bigop('∫', MINUS + '∞', 't')}${v}(τ) dτ`;
+  const shapes = x.mode === 'shape' && h.mode === 'shape';
+  if (shapes && x.shape === 'rect' && h.shape === 'rect' && x.p === h.p)
+    r = {src:'คำตอบ Exercise 2.5', f:`y(t) = ${cases([['2a − |t|', '|t| &lt; 2a'], ['0', 'otherwise']])}`, par:`a = ${fmt(x.p)} → สูงสุด ${fmt(2 * x.p)} ที่ t = 0`};
+  else if (shapes && x.shape === 'exp' && h.shape === 'exp'){
+    const bb = x.p, a = h.p;
+    r = a !== bb ? {src:'คำตอบ Exercise 2.3', f:`y(t) = ${frac('1', 'a − b')}(e<sup>−bt</sup> − e<sup>−at</sup>) u(t)`, par:`a = ${fmt(a)}, b = ${fmt(bb)}`}
+                 : {src:'กรณี a = b', f:'y(t) = t e<sup>−at</sup> u(t)', par:`a = b = ${fmt(a)}`};
+  }
+  else if (shapes && x.shape === 'exp' && x.p === 1 && h.shape === 'ramp')
+    r = {src:'คำตอบ Exercise 2.6', f:`y(t) = ${cases([['0', 't &lt; 0'], [`${frac('A', 'T')}(t − 1 + e<sup>−t</sup>)`, '0 ≤ t &lt; T'], [`${frac('A', 'T')}e<sup>−(t − T)</sup>(T − 1 + e<sup>−T</sup>)`, 't ≥ T']])}`, par:`A = 1, T = ${fmt(h.p)}`};
+  else if (h.mode === 'shape' && h.shape === 'step') r = {src:'สมบัติ x(t) ∗ u(t) · สไลด์ 58', f:intU('x'), par:'พื้นที่สะสมของ x จนถึงเวลา t'};
+  else if (x.mode === 'shape' && x.shape === 'step') r = {src:'สลับที่ได้ (commutative)', f:intU('h'), par:'x ∗ h = h ∗ x'};
+  $('#c-formula').innerHTML = r
+    ? `<span class="src">${r.src}</span><div class="math">${r.f}</div><span class="par math">${r.par}</span>`
+    : '<span class="src">สูตรคำตอบ</span><p class="note" style="margin:0">คู่นี้ไม่มีเฉลยในสไลด์ — ใช้อินทิกรัลของแต่ละช่วงด้านล่างคิดต่อด้วยมือได้ ส่วนกราฟ <span class="math">y(t)</span> คำนวณเชิงตัวเลข</p>';
+}
+function cIntervals(){
+  const bp = CT.bp, out = [];
+  for (let i = 0; i <= bp.length; i++){
+    const tm = !bp.length ? 0 : i === 0 ? bp[0] - .5 : i === bp.length ? bp[i - 1] + .5 : (bp[i - 1] + bp[i]) / 2;
+    const segs = cSegs(tm);
+    const rhs = segs.length ? 'y(t) = ' + segs.map(segSym).join(' + ') : 'y(t) = 0 (ไม่ซ้อนทับ)';
+    out.push(`<li><button type="button" data-t="${tm}" data-i="${i}"><span class="c1 math">${cCond(i)}</span><span class="c2 math">${rhs}</span></button></li>`);
+  }
+  const ul = $('#c-ivs'); ul.innerHTML = out.join('');
+  ul.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { cPlay(false); cSetT(+b.dataset.t); }));
+}
+function cSetT(t){
+  t = Math.max(CT.L, Math.min(CT.R, t));
+  CT.t = t; CT.s = t; CT.flip = 1; CT.q = []; CT.step = null; $('#c-t').value = t; kick();
+}
+function cPlay(on){
+  if (on && CT.t >= CT.R - 1e-6) cSetT(CT.L);
+  CT.playing = on; CT.last = performance.now();
+  if (on){ CT.q = []; CT.flip = 1; CT.s = CT.t; }
+  const b = $('#c-play'); b.innerHTML = on ? ICON_PAUSE : ICON_PLAY; b.setAttribute('aria-label', on ? 'หยุด' : 'เล่นอัตโนมัติ');
+  kick();
+}
+function cDemo(){
+  cPlay(false);
+  CT.flip = 0; CT.s = 0;
+  CT.q = [
+    {dur:dur(600), step:0},
+    {prop:'flip', from:0, to:1, dur:dur(1100), step:0},
+    {dur:dur(350), step:0},
+    {prop:'s', from:0, to:CT.t, dur:dur(700 + 260 * Math.abs(CT.t)), step:1},
+    {dur:dur(1000), step:2},
+    {dur:dur(1000), step:3}
+  ];
+  kick();
+}
+function cStep(now){
+  if (CT.q.length){ runQueue(CT, now); return true; }
+  if (CT.playing){
+    const dt = Math.min(.05, (now - CT.last) / 1000); CT.last = now;
+    let t = CT.t + dt * (CT.R - CT.L) / 8;
+    if (t >= CT.R){ t = CT.R; CT.t = t; CT.s = t; $('#c-t').value = t; cPlay(false); return false; }
+    CT.t = t; CT.s = t; $('#c-t').value = t;
+    return true;
+  }
+  return false;
+}
+function cEqHTML(s, r){
+  const nI = CT.bp.length + 1, iv = cIv(s);
+  const head = `<div class="eq-case">ช่วงที่ ${iv + 1} จาก ${nI} · <span class="math">${cCond(iv)}</span></div>`;
+  if (!r.segs.length) return `<div class="eq-body">${head}<div class="eq-l"><span class="math">h(t − τ)</span> ยังไม่ซ้อนทับกับ <span class="math">x(τ)</span> → ผลคูณเป็น 0 ทุก <span class="math">τ</span></div></div><div class="eq-r">y = 0</div>`;
+  const ts = fx2(s);
+  const num = r.segs.map(sg => `${bigop('∫', bnum(sg.loT), bnum(sg.hiT))}${integrandHTML(sg, ts)} dτ`).join(' + ');
+  const parts = r.segs.length > 1 ? `<div class="eq-l sub math">= ${r.segs.map(sg => f3(sg.v)).join(' + ')}</div>` : '';
+  return `<div class="eq-body">${head}`
+    + `<div class="eq-l math sym">y(t) = ${r.segs.map(segSym).join(' + ')}</div>`
+    + `<div class="eq-l math">y(${ts}) = ${num}</div>${parts}</div>`
+    + `<div class="eq-r">= ${f3(r.v)}</div>`;
+}
+function cDraw(){
+  if (!QA.size()) return;
+  const s = CT.s, steady = CT.flip === 1;
+  const r = steady ? cY(s) : null;
+  const tick = niceStep(CT.R - CT.L, Math.max(4, QA.pw() / 62));
+
+  QA.view(CT.L, CT.R, CT.rA[0], CT.rA[1]);
+  QA.frame({grid:tick / 2, tick, yt:4, xl:'τ'});
+  if (steady && r.segs.length) QA.band(r.segs[0].lo, r.segs[r.segs.length - 1].hi, C.prod, .11);
+  const xs = samples(CT.L, CT.R, Math.max(300, Math.round(QA.pw() * 2)), X.bnds);
+  QA.curve(xs.map(u => [u, X.f(u)]), C.x, 2.3);
+  const f = 1 - 2 * CT.flip;
+  const sg = samples(CT.hs0, CT.hs1, 1400, H.bnds);
+  QA.curve(sg.map(u => [f * u + s, H.f(u)]), C.h, 2.3);
+  if (steady) QA.vline(s, C.mark, 't = ' + fx2(s));
+  if (!steady || CT.q.length){
+    const lbl = CT.flip === 0 ? 'h(τ) (ก่อนพลิก)' : CT.flip < 1 ? 'กำลังพลิก…' : (CT.step === 1 ? 'กำลังเลื่อน…' : '');
+    if (lbl) QA.text(lbl, QA.L + 6, QA.T + 8, C.h, '500 12px "IBM Plex Sans Thai", sans-serif', 'left');
+  }
+
+  QB.size(); QB.view(CT.L, CT.R, CT.rB[0], CT.rB[1]);
+  QB.frame({grid:tick / 2, tick, yt:3, xl:'τ'});
+  if (steady){
+    if (r.segs.length){
+      QB.band(r.segs[0].lo, r.segs[r.segs.length - 1].hi, C.prod, .06);
+      r.segs.forEach(sgm => {
+        const xp = X.pcs[sgm.i].fn, hp = H.pcs[sgm.j].fn, e = 1e-9;
+        const pts = samples(sgm.lo, sgm.hi, 240, []).map(u => { const q = Math.min(sgm.hi - e, Math.max(sgm.lo + e, u)); const val = xp(q) * hp(s - q); return [u, isFinite(val) ? val : 0]; });
+        QB.area(pts, C.prod, .30); QB.curve(pts, C.prod, 2);
+      });
+      const mid = (r.segs[0].lo + r.segs[r.segs.length - 1].hi) / 2;
+      const cx = Math.min(QB.R - 60, Math.max(QB.L + 60, QB.X(mid)));
+      QB.text('พื้นที่ = ' + f3(r.v), cx, QB.T + 2, C.prod, '600 12.5px "IBM Plex Sans Thai", "IBM Plex Mono", sans-serif', 'center', 'top');
+    } else QB.text('ไม่ซ้อนทับ → ผลคูณเป็น 0 ทุก τ', (QB.L + QB.R) / 2, QB.T + 14, C.muted, '13px "IBM Plex Sans Thai", sans-serif');
+  }
+
+  QC.size(); QC.view(CT.L, CT.R, CT.rC[0], CT.rC[1]);
+  QC.frame({grid:tick / 2, tick, yt:3, xl:'t'});
+  QC.curve(CT.curve, C.axis, 1.5, [4, 5], .85);
+  if (steady){
+    const tr = CT.curve.filter(p => p[0] <= s); tr.push([s, r.v]);
+    QC.curve(tr, C.y, 2.8);
+    QC.vline(s, C.mark, null);
+    QC.point(s, r.v, C.y, C.mark);
+  }
+
+  $('#c-tval').textContent = fx2(s);
+  const key = steady ? s.toFixed(3) : 'moving';
+  if (key !== CT.eqKey){
+    CT.eqKey = key;
+    const eq = $('#c-eq');
+    if (steady){ eq.innerHTML = cEqHTML(s, r); eq.classList.remove('dim'); } else eq.classList.add('dim');
+    $('#c-s2').textContent = `h(−τ) → h(${fx2(s)} − τ)`;
+    const iv = steady ? cIv(s) : -1;
+    if (iv !== CT.iv){ CT.iv = iv; document.querySelectorAll('#c-ivs button').forEach(b => b.classList.toggle('on', +b.dataset.i === iv)); }
+  }
+  document.querySelectorAll('#c-steps li').forEach((li, i) => li.classList.toggle('on', CT.step === i));
+}
+function cSigKey(s){
+  if (s.mode === 'shape') return 'S|' + s.shape + '|' + s.p;
+  return 'C|' + JSON.stringify(s.pieces.map(q => [q.expr.replace(/\s/g, ''), q.a, q.b]));
+}
+function cMatchPreset(){
+  let m = 'custom';
+  for (const k in CPRE){ if (cSigKey(CPRE[k].x) === cSigKey(CT.x) && cSigKey(CPRE[k].h) === cSigKey(CT.h)) m = k; }
+  $('#c-preset').value = m;
+  $('#c-note').textContent = m === 'custom' ? 'สัญญาณที่กำหนดเอง — ลองลาก t ดูว่าขอบเขตการอินทิเกรตเปลี่ยนเมื่อไหร่' : CPRE[m].note;
+}
+
+/* =====================================================================
+   WIRING
+   ===================================================================== */
+const dPE = {
+  x: PieceEditor($('#d-x-pe'), {v:'n', discrete:true, onChange: p => { DSIG.x.pieces = p; dPlay(false); dRead(); }}),
+  h: PieceEditor($('#d-h-pe'), {v:'n', discrete:true, onChange: p => { DSIG.h.pieces = p; dPlay(false); dRead(); }})
+};
+const dSel = $('#d-preset');
+dSel.innerHTML = Object.keys(DPRE).map(k => `<option value="${k}">${DPRE[k].label}</option>`).join('') + '<option value="custom">กำหนดเอง</option>';
+dSel.addEventListener('change', () => { dPlay(false); if (dSel.value !== 'custom') dApplyPreset(dSel.value); });
+['#d-x', '#d-xs', '#d-h', '#d-hs'].forEach(id => $(id).addEventListener('input', () => { dPlay(false); dRead(); }));
+document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => { dPlay(false); dSetMode(b.dataset.sig, b.dataset.mode); }));
+$('#d-n').addEventListener('input', e => { dPlay(false); dGo(+e.target.value); });
+$('#d-prev').addEventListener('click', () => { dPlay(false); dGo(D.n - 1); });
+$('#d-next').addEventListener('click', () => { dPlay(false); dGo(D.n + 1); });
+$('#d-play').addEventListener('click', () => dPlay(!D.playing));
+$('#d-demo').addEventListener('click', dDemo);
+attachDrag($('#d-pa'), PA, v => { dPlay(false); dGo(v); });
+attachDrag($('#d-pc'), PCd, v => { dPlay(false); dGo(v); });
+
+const cPE = {
+  x: PieceEditor($('#c-xpe'), {v:'t', discrete:false, onChange: p => { CT.x.pieces = p; cPlay(false); cMatchPreset(); cSetData(); }}),
+  h: PieceEditor($('#c-hpe'), {v:'t', discrete:false, onChange: p => { CT.h.pieces = p; cPlay(false); cMatchPreset(); cSetData(); }})
+};
+const cSel = $('#c-preset');
+cSel.innerHTML = Object.keys(CPRE).map(k => `<option value="${k}">${CPRE[k].label}</option>`).join('') + '<option value="custom">กำหนดเอง</option>';
+function cApplyPreset(k){
+  const p = CPRE[k]; if (!p) return;
+  ['x', 'h'].forEach(w => {
+    const s = p[w];
+    CT[w] = {mode: s.mode, shape: s.shape, p: s.p, pieces: (s.pieces || SHAPES[s.shape].pcs(s.p)).map(q => Object.assign({}, q))};
+    if (s.mode === 'custom') cPE[w].set(CT[w].pieces);
+  });
+  $('#c-note').textContent = p.note; cSel.value = k;
+  cSetData(p.t);
+}
+cSel.addEventListener('change', () => { cPlay(false); if (cSel.value !== 'custom') cApplyPreset(cSel.value); });
+['x', 'h'].forEach(w => {
+  const shapeSel = $('#c-' + w + 'shape');
+  shapeSel.innerHTML = Object.keys(SHAPES).map(k => `<option value="${k}">${SHAPES[k].name}</option>`).join('') + '<option value="custom">✎ เขียนเองด้วยสูตร + เงื่อนไข</option>';
+  shapeSel.addEventListener('change', () => {
+    cPlay(false);
+    const cur = CT[w], v = shapeSel.value;
+    if (v === 'custom'){
+      const pieces = cur.mode === 'custom' ? cur.pieces : SHAPES[cur.shape].pcs(cur.p).map(q => Object.assign({}, q));
+      CT[w] = {mode:'custom', shape: cur.shape, p: cur.p, pieces};
+      cPE[w].set(pieces);
+    } else CT[w] = {mode:'shape', shape: v, p: SHAPES[v].def, pieces: cur.pieces};
+    cMatchPreset(); cSetData();
+  });
+  $('#c-' + w + 'p').addEventListener('input', e => { cPlay(false); CT[w].p = +e.target.value; cMatchPreset(); cSetData(); });
+});
+$('#c-t').addEventListener('input', e => { cPlay(false); cSetT(+e.target.value); });
+$('#c-play').addEventListener('click', () => cPlay(!CT.playing));
+$('#c-demo').addEventListener('click', cDemo);
+attachDrag($('#c-pa'), QA, v => { cPlay(false); cSetT(v); });
+attachDrag($('#c-pc'), QC, v => { cPlay(false); cSetT(v); });
+
+function setTab(t){
+  active = t;
+  $('#tab-d').setAttribute('aria-selected', t === 'd'); $('#tab-c').setAttribute('aria-selected', t === 'c');
+  $('#panel-d').hidden = t !== 'd'; $('#panel-c').hidden = t !== 'c';
+  if (t === 'd') cPlay(false); else dPlay(false);
+  try { localStorage.setItem('cp203-conv-tab', t); } catch(_){}
+  kick();
+}
+$('#tab-d').addEventListener('click', () => setTab('d'));
+$('#tab-c').addEventListener('click', () => setTab('c'));
+document.querySelector('.tabs').addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowLeft'){ const t = active === 'd' ? 'c' : 'd'; setTab(t); $('#tab-' + t).focus(); }
+});
+
+$('#d-play').innerHTML = ICON_PLAY; $('#c-play').innerHTML = ICON_PLAY;
+dPE.x.set(DSIG.x.pieces); dPE.h.set(DSIG.h.pieces);
+dApplyPreset('ex21');
+cApplyPreset('ex25');
+let saved = 'd'; try { saved = localStorage.getItem('cp203-conv-tab') || 'd'; } catch(_){}
+setTab(saved === 'c' ? 'c' : 'd');
+
+const onTheme = () => { readColors(); D.eqKey = ''; kick(); };
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', onTheme);
+new MutationObserver(onTheme).observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
+if (window.ResizeObserver) new ResizeObserver(() => kick()).observe(document.querySelector('.wrap'));
+else window.addEventListener('resize', kick);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(kick);
+})();
+</script>
+</body>
+</html>
