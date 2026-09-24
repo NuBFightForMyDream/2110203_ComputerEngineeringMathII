@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- CP203 Fourier Lab — continuous time (Lecture 03) -->
+<title>Fourier Lab · Continuous Time</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400;1,600&display=swap">
+<style>
+html,body{margin:0}
+[hidden]{display:none!important}
+img{max-width:100%}
+/* ===== shared tokens & layout for CEMII lecture pages ===== */
+:root{
+  --bg:#EEF1F5; --surface:#FFFFFF; --sunk:#F6F8FB; --ink:#18202D; --muted:#5A6577; --line:#D3DAE4;
+  --grid:rgba(52,86,140,.10); --axis:#8792A5;
+  --x:#1C2638; --h:#D0392C; --mark:#2E6BD9; --prod:#7A4ED3; --y:#12865A; --amber:#B8770F; --on-mark:#FFFFFF;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1219; --surface:#151B24; --sunk:#111721; --ink:#E5E9F0; --muted:#98A2B3; --line:#29323F;
+    --grid:rgba(150,180,230,.08); --axis:#5F6979;
+    --x:#DDE4EF; --h:#FF6C5E; --mark:#6FA1FF; --prod:#B596FF; --y:#44CF98; --amber:#E8A93E; --on-mark:#0E1219;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1219; --surface:#151B24; --sunk:#111721; --ink:#E5E9F0; --muted:#98A2B3; --line:#29323F;
+  --grid:rgba(150,180,230,.08); --axis:#5F6979;
+  --x:#DDE4EF; --h:#FF6C5E; --mark:#6FA1FF; --prod:#B596FF; --y:#44CF98; --amber:#E8A93E; --on-mark:#0E1219;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.65 "IBM Plex Sans Thai",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1240px;margin:0 auto;padding-inline:clamp(16px,3vw,36px);padding-block:28px 72px}
+.math{font-family:"STIX Two Text","Cambria Math","Times New Roman",serif;font-style:italic;letter-spacing:.01em}
+.up{font-style:normal}
+code{font:12.5px/1.4 "IBM Plex Mono",ui-monospace,monospace;background:color-mix(in srgb,var(--ink) 7%,transparent);padding:1px 5px;border-radius:4px;white-space:nowrap}
+:focus-visible{outline:2px solid var(--mark);outline-offset:2px}
+
+header.top{padding-bottom:20px;border-bottom:1px solid var(--line)}
+.eyebrow{font:500 12px/1.4 "IBM Plex Mono",ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+h1{font:600 clamp(28px,4.2vw,42px)/1.06 "STIX Two Text","Times New Roman",serif;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h1 .math{font-weight:400;color:var(--muted);font-size:.58em;margin-left:.3em;white-space:nowrap}
+.lede{margin:10px 0 0;color:var(--muted);max-width:66ch}
+
+.layout{display:grid;grid-template-columns:248px minmax(0,1fr);gap:32px;margin-top:24px;align-items:start}
+@media (max-width:920px){.layout{grid-template-columns:minmax(0,1fr);gap:20px}}
+.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);display:flex;flex-direction:column;gap:2px;max-height:calc(100vh - 40px);overflow-y:auto}
+@media (max-width:920px){.toc{position:static;max-height:none;flex-direction:row;flex-wrap:wrap;gap:6px;padding-bottom:4px}}
+.toc .lab{font:500 11.5px/1.4 "IBM Plex Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+@media (max-width:920px){.toc .lab{width:100%;margin-bottom:2px}}
+.toc a{display:flex;gap:9px;align-items:baseline;padding:7px 10px;border-radius:8px;color:var(--muted);text-decoration:none;font-size:14px;line-height:1.35;border:1px solid transparent}
+.toc a b{font:600 11.5px/1.4 "IBM Plex Mono",monospace;color:var(--muted);flex:none}
+.toc a:hover{background:color-mix(in srgb,var(--mark) 7%,transparent);color:var(--ink)}
+.toc a.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.toc a.on b{color:inherit;opacity:.72}
+
+main{display:flex;flex-direction:column;gap:14px;min-width:0}
+section.sec{scroll-margin-top:24px;padding-block:14px 26px;border-top:1px dashed var(--line)}
+section.sec:first-of-type{border-top:0;padding-top:0}
+section.sec > h2{font:600 24px/1.25 "STIX Two Text","Times New Roman",serif;margin:0 0 4px;display:flex;flex-wrap:wrap;align-items:baseline;gap:10px}
+section.sec > h2 .n{font:600 12px/1 "IBM Plex Mono",monospace;color:var(--mark);letter-spacing:.06em}
+section.sec > h2 .th{font-family:"IBM Plex Sans Thai",sans-serif;font-size:15px;font-weight:400;color:var(--muted)}
+.intro{margin:6px 0 16px;color:var(--muted);max-width:74ch}
+.intro b{color:var(--ink);font-weight:600}
+
+/* formula card */
+.fcard{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:14px}
+.fcard .ftitle{font:500 11.5px/1.4 "IBM Plex Mono",monospace;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+.fbig{font-size:clamp(19px,2.6vw,25px);line-height:2.1;overflow-x:auto;padding-bottom:2px}
+.fbig.sm{font-size:clamp(17px,2.2vw,21px)}
+.legend-sym{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px 18px;margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
+.legend-sym div{display:flex;gap:9px;align-items:baseline;font-size:13.5px;color:var(--muted)}
+.legend-sym .s{font-family:"STIX Two Text",serif;font-style:italic;font-size:17px;color:var(--ink);flex:none;min-width:2.4em}
+.note{margin:10px 0 0;font-size:13.5px;color:var(--muted)}
+.note b{color:var(--ink)}
+.warn{border-left:3px solid var(--amber);padding-left:12px;margin:12px 0 0;font-size:13.5px;color:var(--muted)}
+.warn b{color:var(--ink)}
+
+/* derivation stepper */
+.deriv{margin:0;padding:0;list-style:none;counter-reset:d}
+.deriv li{counter-increment:d;display:grid;grid-template-columns:26px minmax(0,1fr);gap:4px 12px;padding:9px 0;border-top:1px solid var(--line);transition:opacity .2s}
+.deriv li:first-child{border-top:0}
+.deriv li::before{content:counter(d);font:600 11px/18px "IBM Plex Mono",monospace;color:var(--muted);background:var(--sunk);border-radius:50%;width:18px;height:18px;text-align:center;margin-top:5px}
+.deriv li.dim{opacity:.22}
+.deriv .ln{font-size:18px;overflow-x:auto}
+.deriv .why{grid-column:2;font-size:13px;color:var(--muted)}
+.dnav{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}
+.dnav .cnt{font:500 12.5px/1 "IBM Plex Mono",monospace;color:var(--muted)}
+
+/* figures + controls */
+.plot{margin:0 0 12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px 6px}
+.plot figcaption{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 14px;align-items:baseline;margin-bottom:2px}
+.pt{font-weight:600;font-size:14px}
+.pt .math{font-weight:400;font-size:15.5px}
+.legend{display:flex;flex-wrap:wrap;gap:2px 12px;font-size:12.5px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:3px;border-radius:2px;background:var(--c)}
+.legend i.dash{background:repeating-linear-gradient(90deg,var(--c) 0 4px,transparent 4px 7px)}
+.legend .math{font-size:14px;color:var(--ink)}
+canvas{display:block;width:100%;height:200px;touch-action:pan-y}
+canvas.drag{cursor:ew-resize}
+.ctrls{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-bottom:12px}
+.ctrl{display:flex;align-items:center;gap:9px;font-size:13.5px;flex:1 1 210px;min-width:0}
+.ctrl > span:first-child{color:var(--muted);white-space:nowrap}
+.ctrl input[type=range]{flex:1;min-width:80px;accent-color:var(--mark)}
+.ctrl output{font:600 13px/1 "IBM Plex Mono",monospace;color:var(--mark);min-width:3.4em;text-align:right;font-variant-numeric:tabular-nums}
+.ctrl select,.ctrl input[type=text]{font:13.5px "IBM Plex Mono",monospace;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 8px;max-width:100%}
+.ctrl select{font-family:"IBM Plex Sans Thai",sans-serif;cursor:pointer;flex:1}
+.btn{appearance:none;font:500 13.5px/1 "IBM Plex Sans Thai",system-ui,sans-serif;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 12px;min-height:34px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--mark)}
+.btn.primary{background:var(--mark);border-color:var(--mark);color:var(--on-mark)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.sm{min-height:30px;padding:6px 10px;font-size:13px}
+.chk{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;color:var(--muted);cursor:pointer}
+.chk input{accent-color:var(--mark)}
+
+/* readout */
+.out{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 20px;padding:12px 4px;border-block:1px dashed var(--line);margin-bottom:12px;min-height:74px}
+.out .l{display:flex;flex-direction:column;gap:3px;min-width:0;font-size:17px;flex:1 1 320px}
+.out .l .sub{font-size:13px;color:var(--muted)}
+.out .r{font:600 24px/1 "IBM Plex Mono",monospace;color:var(--y);white-space:nowrap}
+.out .r.small{font-size:18px}
+
+/* math bits */
+.bigop{display:inline-flex;align-items:center;vertical-align:middle;margin:0 .1em 0 .12em}
+.bigop .op{font-style:normal;font-size:1.4em;line-height:1}
+.bigop .lims{display:inline-flex;flex-direction:column;justify-content:space-between;font-size:.55em;line-height:1.2;margin-left:.12em;min-height:2.2em}
+.frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;font-size:.86em;line-height:1.25;margin:0 .14em}
+.frac>span:last-child{border-top:1px solid currentColor;padding-top:1px}
+.cases{display:inline-flex;align-items:center;vertical-align:middle}
+.cases .brace{font-size:2.6em;line-height:1;font-style:normal;margin-right:.08em}
+.cases .rows{display:grid;grid-template-columns:auto auto;gap:3px 16px;align-items:center;font-size:.92em}
+.cases .cond{color:var(--muted);white-space:nowrap}
+.box{display:inline-block;border:1.5px solid var(--y);border-radius:8px;padding:2px 10px;background:color-mix(in srgb,var(--y) 8%,transparent)}
+.hl{background:color-mix(in srgb,var(--mark) 16%,transparent);border-radius:4px;padding:0 3px}
+.hl2{background:color-mix(in srgb,var(--prod) 16%,transparent);border-radius:4px;padding:0 3px}
+
+/* tables */
+.tscroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface);margin-bottom:12px}
+table{border-collapse:collapse;font:13.5px/1.35 "IBM Plex Sans Thai",sans-serif;width:max-content;min-width:100%}
+th,td{padding:9px 12px;text-align:left;vertical-align:top;border-top:1px solid var(--line)}
+thead th{border-top:0;color:var(--muted);font-weight:500;font-size:12.5px;letter-spacing:.04em;text-transform:uppercase}
+td.m,th.m{font-family:"STIX Two Text",serif;font-style:italic;font-size:15.5px}
+td.num{font-family:"IBM Plex Mono",monospace;font-style:normal;text-align:right;font-variant-numeric:tabular-nums}
+tbody tr.on{background:color-mix(in srgb,var(--mark) 10%,transparent)}
+.mini{font-size:12.5px;color:var(--muted)}
+footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 18px;justify-content:space-between}
+footer a{color:var(--mark)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+
+.wrapc{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <p class="eyebrow">CP203 · Lecture 03 · Fourier analysis of continuous-time signals</p>
+    <h1>Fourier Lab <span class="math">x(t) ↔ X(jω)</span></h1>
+    <p class="lede">อ่านสูตรทีละตัว แล้วลองเล่นกับกราฟจนเห็นว่าทำไมมันถึงเป็นแบบนั้น — เริ่มจากสัญญาณคาบ (Fourier series) ไปจนถึงสัญญาณไม่เป็นคาบ (Fourier transform) พร้อมโจทย์จากสไลด์</p>
+  </header>
+
+  <div class="layout">
+    <nav class="toc" aria-label="หัวข้อ">
+      <span class="lab">หัวข้อ</span>
+      <a href="#eig"><b>01</b><span>ทำไมต้อง <span class="math">e<sup>jωt</sup></span></span></a>
+      <a href="#fs"><b>02</b><span>Fourier series</span></a>
+      <a href="#ak"><b>03</b><span>หา <span class="math">a<sub>k</sub></span> ได้ยังไง</span></a>
+      <a href="#ex32"><b>04</b><span>Exercise 3.2 · line spectra</span></a>
+      <a href="#limit"><b>05</b><span><span class="math">T → ∞</span> · series → transform</span></a>
+      <a href="#ctft"><b>06</b><span>คู่ transform ที่ต้องจำ</span></a>
+      <a href="#props"><b>07</b><span>สมบัติของ CTFT</span></a>
+    </nav>
+
+    <main>
+      <!-- ============ 01 ============ -->
+      <section class="sec" id="eig">
+        <h2><span class="n">01</span> ทำไมทุกอย่างเริ่มที่ <span class="math">e<sup>jωt</sup></span> <span class="th">— eigenfunction ของระบบ LTI</span></h2>
+        <p class="intro">ป้อน <span class="math">e<sup>st</sup></span> เข้าระบบ LTI แล้วเอาต์พุตคือ <b>ตัวมันเองคูณค่าคงที่</b> <span class="math">H(s)</span> — ความถี่ไม่เปลี่ยน เปลี่ยนแค่ <b>ขนาด</b> กับ <b>เฟส</b> เพราะงั้นถ้าเราแตกสัญญาณเป็นผลรวมของ <span class="math">e<sup>jωt</sup></span> ได้ เราก็รู้เอาต์พุตของทั้งระบบทันที นี่คือเหตุผลทั้งหมดที่เรียน Fourier</p>
+        <div class="fcard">
+          <p class="ftitle">Eigenfunction property</p>
+          <div class="fbig math">y(t) = <span class="bigop"><span class="op">∫</span><span class="lims"><span>∞</span><span>−∞</span></span></span> h(τ) e<sup>s(t−τ)</sup> dτ = e<sup>st</sup> <span class="bigop"><span class="op">∫</span><span class="lims"><span>∞</span><span>−∞</span></span></span> h(τ) e<sup>−sτ</sup> dτ = <span class="box">H(s) · e<sup>st</sup></span></div>
+          <div class="legend-sym">
+            <div><span class="s">e<sup>st</sup></span><span>อินพุตรูปเอ็กซ์โปเนนเชียลเชิงซ้อน (eigenfunction)</span></div>
+            <div><span class="s">H(s)</span><span>ค่าคงที่เชิงซ้อน = eigenvalue ของระบบที่ความถี่นั้น</span></div>
+            <div><span class="s">h(τ)</span><span>impulse response ของระบบ</span></div>
+            <div><span class="s">s = jω</span><span>เมื่อสนใจเฉพาะความถี่จริง ๆ → <span class="math">H(jω)</span> = frequency response</span></div>
+          </div>
+        </div>
+        <div class="ctrls">
+          <label class="ctrl"><span>ความถี่ <span class="math">ω</span></span><input type="range" id="eg-w" min="0.2" max="6" step="0.05" value="1.2"><output id="eg-wv">1.20</output></label>
+          <label class="ctrl"><span>ระบบ <span class="math">RC</span></span><input type="range" id="eg-rc" min="0.1" max="3" step="0.05" value="1"><output id="eg-rcv">1.00</output></label>
+        </div>
+        <figure class="plot">
+          <figcaption><span class="pt">อินพุต–เอาต์พุตของระบบ <span class="math">H(jω) = 1/(1 + jωRC)</span></span>
+          <span class="legend"><span><i style="--c:var(--x)"></i><span class="math">cos(ωt)</span> เข้า</span><span><i style="--c:var(--y)"></i>ออก = <span class="math">|H| cos(ωt + ∠H)</span></span></span></figcaption>
+          <canvas id="eg-time" data-h="210"></canvas>
+        </figure>
+        <div class="out">
+          <div class="l"><div class="math" id="eg-eq"></div><div class="sub">ความถี่ของเอาต์พุตเท่าเดิมเสมอ — ยิ่ง <span class="math">ω</span> สูง ระบบ RC ยิ่งลดขนาดและหน่วงเฟสมากขึ้น (เป็น lowpass)</div></div>
+          <div class="r small" id="eg-val"></div>
+        </div>
+      </section>
+
+      <!-- ============ 02 ============ -->
+      <section class="sec" id="fs">
+        <h2><span class="n">02</span> Fourier series <span class="th">— สัญญาณคาบ = ผลรวมของฮาร์มอนิก</span></h2>
+        <p class="intro">สัญญาณคาบ <span class="math">T</span> ใด ๆ เขียนเป็นผลรวมของ <span class="math">e<sup>jkω₀t</sup></span> ที่ความถี่เป็นจำนวนเท่าของ <span class="math">ω₀ = 2π/T</span> ได้ — เลื่อนจำนวนฮาร์มอนิก <span class="math">N</span> แล้วดูผลรวมค่อย ๆ กลายเป็นรูปเดิม</p>
+        <div class="fcard">
+          <p class="ftitle">สูตรคู่ของ Fourier series (สมการ 3.12 / 3.13)</p>
+          <div class="fbig math">x(t) = <span class="bigop"><span class="op">Σ</span><span class="lims"><span>∞</span><span>k=−∞</span></span></span> a<sub>k</sub> e<sup>jkω₀t</sup> <span style="display:inline-block;width:2.4em"></span> a<sub>k</sub> = <span class="frac"><span>1</span><span>T</span></span> <span class="bigop"><span class="op">∫</span><span class="lims"><span></span><span>&lt;T&gt;</span></span></span> x(t) e<sup>−jkω₀t</sup> dt</div>
+          <div class="legend-sym">
+            <div><span class="s">ω₀</span><span>ความถี่มูลฐาน <span class="math">= 2π/T</span> (rad/s)</span></div>
+            <div><span class="s">k</span><span>ฮาร์มอนิกที่เท่าไหร่ — <span class="math">k = 0</span> คือ DC</span></div>
+            <div><span class="s">a<sub>k</sub></span><span>น้ำหนักเชิงซ้อน: <span class="math">|a<sub>k</sub>|</span> = แอมพลิจูด, <span class="math">∠a<sub>k</sub></span> = เฟส</span></div>
+            <div><span class="s">&lt;T&gt;</span><span>อินทิเกรตช่วงไหนก็ได้ที่ยาวหนึ่งคาบ</span></div>
+          </div>
+          <p class="note">ถ้า <span class="math">x(t)</span> เป็นจำนวนจริง จะได้ <span class="math">a<sub>−k</sub> = a<sub>k</sub><sup>*</sup></span> เสมอ → <span class="math">|a<sub>k</sub>|</span> สมมาตร และ <span class="math">∠a<sub>k</sub></span> สมมาตรกลับด้าน จึงจับคู่กันเป็นไซน์จริงได้: <span class="math">x(t) = a₀ + 2Σ<sub>k≥1</sub> |a<sub>k</sub>| cos(kω₀t + ∠a<sub>k</sub>)</span></p>
+        </div>
+        <div class="ctrls">
+          <label class="ctrl"><span>รูปคลื่น</span><select id="fs-wave">
+            <option value="square">คลื่นสี่เหลี่ยม ±K (Exercise 3.1)</option>
+            <option value="saw">ฟันเลื่อย</option>
+            <option value="tri">สามเหลี่ยม</option>
+            <option value="pulse">พัลส์เทรน (ปรับความกว้างได้)</option>
+            <option value="halfsine">ไซน์เรียงกระแสครึ่งคลื่น</option>
+          </select></label>
+          <label class="ctrl"><span>จำนวนฮาร์มอนิก <span class="math">N</span></span><input type="range" id="fs-n" min="1" max="40" step="1" value="3"><output id="fs-nv">3</output></label>
+          <label class="ctrl"><span>ความกว้างพัลส์</span><input type="range" id="fs-duty" min="0.1" max="0.9" step="0.05" value="0.5"><output id="fs-dutyv">0.50</output></label>
+          <label class="chk"><input type="checkbox" id="fs-harm"> แสดงฮาร์มอนิกทีละตัว</label>
+        </div>
+        <figure class="plot">
+          <figcaption><span class="pt">โดเมนเวลา — ผลรวมบางส่วน <span class="math">x<sub>N</sub>(t)</span></span>
+          <span class="legend"><span><i class="dash" style="--c:var(--axis)"></i>สัญญาณจริง</span><span><i style="--c:var(--y)"></i>ผลรวม <span class="math">k = −N…N</span></span><span><i style="--c:var(--prod)"></i>ฮาร์มอนิกเดี่ยว</span></span></figcaption>
+          <canvas id="fs-time" data-h="240"></canvas>
+        </figure>
+        <div class="wrapc">
+          <figure class="plot"><figcaption><span class="pt">Magnitude spectrum <span class="math">|a<sub>k</sub>|</span></span></figcaption><canvas id="fs-mag" data-h="180"></canvas></figure>
+          <figure class="plot"><figcaption><span class="pt">Phase spectrum <span class="math">∠a<sub>k</sub></span></span></figcaption><canvas id="fs-ph" data-h="180"></canvas></figure>
+        </div>
+        <div class="out">
+          <div class="l"><div class="math" id="fs-eq"></div><div class="sub" id="fs-sub"></div></div>
+          <div class="r small" id="fs-err"></div>
+        </div>
+        <p class="warn"><b>Gibbs phenomenon:</b> ตรงจุดที่สัญญาณกระโดด ไม่ว่าจะใส่ฮาร์มอนิกเยอะแค่ไหน ยอดแหลมจะเกินไปราว 9% ของขนาดกระโดดเสมอ (มันแค่แคบลงเรื่อย ๆ) — ลองดันสไลเดอร์ <span class="math">N</span> ไปสุดแล้วซูมดูขอบ</p>
+      </section>
+
+      <!-- ============ 03 ============ -->
+      <section class="sec" id="ak">
+        <h2><span class="n">03</span> สูตร <span class="math">a<sub>k</sub></span> ทำงานยังไง <span class="th">— ม้วนสัญญาณรอบวงกลมแล้วหาจุดศูนย์ถ่วง</span></h2>
+        <p class="intro">คูณ <span class="math">x(t)</span> ด้วย <span class="math">e<sup>−jkω₀t</sup></span> = จับสัญญาณ<b>ม้วนรอบวงกลม</b>ด้วยอัตรา <span class="math">k</span> รอบต่อคาบ แล้วเฉลี่ย (อินทิเกรตแล้วหารด้วย <span class="math">T</span>) = <b>จุดศูนย์ถ่วง</b> ของเส้นที่ม้วนได้ ถ้าสัญญาณมีฮาร์มอนิกที่ <span class="math">k</span> นั้นจริง จุดศูนย์ถ่วงจะเบนออกจากศูนย์กลาง ถ้าไม่มีมันจะกระจายรอบ ๆ ศูนย์แล้วหักล้างกันหมดเป็น 0</p>
+        <div class="fcard">
+          <p class="ftitle">ที่มาของสูตร — กดดูทีละขั้น</p>
+          <ol class="deriv">
+            <li><span class="ln math">x(t) = <span class="bigop"><span class="op">Σ</span><span class="lims"><span>∞</span><span>k=−∞</span></span></span> a<sub>k</sub> e<sup>jkω₀t</sup></span><span class="why">เริ่มจากสมมติว่าเขียนเป็นผลรวมได้ (3.3)</span></li>
+            <li><span class="ln math">x(t) e<sup>−jnω₀t</sup> = <span class="bigop"><span class="op">Σ</span><span class="lims"><span></span><span>k</span></span></span> a<sub>k</sub> e<sup>j(k−n)ω₀t</sup></span><span class="why">คูณทั้งสองข้างด้วย <span class="math">e<sup>−jnω₀t</sup></span> เพื่อ “เล็ง” ฮาร์มอนิกตัวที่ <span class="math">n</span></span></li>
+            <li><span class="ln math"><span class="bigop"><span class="op">∫</span><span class="lims"><span>T</span><span>0</span></span></span> e<sup>j(k−n)ω₀t</sup> dt = <span class="cases"><span class="brace">{</span><span class="rows"><span>T</span><span class="cond">k = n</span><span>0</span><span class="cond">k ≠ n</span></span></span></span><span class="why">คุณสมบัติ orthogonal: ฮาร์มอนิกคนละตัวคูณกันแล้วอินทิเกรตหนึ่งคาบได้ 0 (3.8)</span></li>
+            <li><span class="ln math"><span class="bigop"><span class="op">∫</span><span class="lims"><span>T</span><span>0</span></span></span> x(t) e<sup>−jnω₀t</sup> dt = a<sub>n</sub> T</span><span class="why">เหลือรอดแค่พจน์เดียวคือ <span class="math">k = n</span> (3.9)</span></li>
+            <li><span class="ln math"><span class="box">a<sub>n</sub> = <span class="frac"><span>1</span><span>T</span></span> <span class="bigop"><span class="op">∫</span><span class="lims"><span></span><span>&lt;T&gt;</span></span></span> x(t) e<sup>−jnω₀t</sup> dt</span></span><span class="why">ย้ายข้าง — ได้สูตรวิเคราะห์ (3.10)</span></li>
+          </ol>
+        </div>
+        <div class="ctrls">
+          <label class="ctrl"><span>ม้วนที่ฮาร์มอนิก <span class="math">k</span></span><input type="range" id="ak-k" min="-6" max="6" step="1" value="1"><output id="ak-kv">1</output></label>
+          <span class="mini">ใช้รูปคลื่นเดียวกับหัวข้อ 02</span>
+        </div>
+        <div class="wrapc">
+          <figure class="plot"><figcaption><span class="pt">ม้วนรอบวงกลม: <span class="math">x(t) e<sup>−jkω₀t</sup></span></span><span class="legend"><span><i style="--c:var(--prod)"></i>เส้นที่ม้วน</span><span><i style="--c:var(--mark)"></i>จุดศูนย์ถ่วง = <span class="math">a<sub>k</sub></span></span></span></figcaption><canvas id="ak-wrap" data-h="300"></canvas></figure>
+          <figure class="plot"><figcaption><span class="pt">ตัวถูกอินทิเกรตในหนึ่งคาบ</span><span class="legend"><span><i style="--c:var(--x)"></i>ส่วนจริง</span><span><i style="--c:var(--h)"></i>ส่วนจินตภาพ</span></span></figcaption><canvas id="ak-int" data-h="300"></canvas></figure>
+        </div>
+        <div class="out">
+          <div class="l"><div class="math" id="ak-eq"></div><div class="sub" id="ak-sub"></div></div>
+          <div class="r small" id="ak-val"></div>
+        </div>
+      </section>
+
+      <!-- ============ 04 ============ -->
+      <section class="sec" id="ex32">
+        <h2><span class="n">04</span> Exercise 3.2 <span class="th">— อ่าน line spectra จากสัญญาณที่เป็นไซน์อยู่แล้ว</span></h2>
+        <p class="intro">ถ้าสัญญาณเขียนเป็นไซน์/โคไซน์อยู่แล้ว ไม่ต้องอินทิเกรต — แค่แปลงเป็น <span class="math">e<sup>jkω₀t</sup></span> ด้วยสูตรออยเลอร์ แล้วอ่านสัมประสิทธิ์ออกมาตรง ๆ ติ๊กแต่ละพจน์ดูว่ามันไปโผล่ที่เส้นไหน</p>
+        <div class="fcard">
+          <p class="ftitle">สูตรออยเลอร์ที่ใช้แปลง</p>
+          <div class="fbig sm math">cos θ = <span class="frac"><span>e<sup>jθ</sup> + e<sup>−jθ</sup></span><span>2</span></span> <span style="display:inline-block;width:1.6em"></span> sin θ = <span class="frac"><span>e<sup>jθ</sup> − e<sup>−jθ</sup></span><span>2j</span></span> <span style="display:inline-block;width:1.6em"></span> A cos(kω₀t + φ) → a<sub>k</sub> = <span class="frac"><span>A</span><span>2</span></span> e<sup>jφ</sup>, a<sub>−k</sub> = <span class="frac"><span>A</span><span>2</span></span> e<sup>−jφ</sup></div>
+        </div>
+        <div class="ctrls">
+          <label class="chk"><input type="checkbox" id="e1" checked> <span class="math">1</span></label>
+          <label class="chk"><input type="checkbox" id="e2" checked> <span class="math">sin(ω₀t)</span></label>
+          <label class="chk"><input type="checkbox" id="e3" checked> <span class="math">2cos(ω₀t)</span></label>
+          <label class="chk"><input type="checkbox" id="e4" checked> <span class="math">cos(2ω₀t + π/4)</span></label>
+        </div>
+        <figure class="plot"><figcaption><span class="pt">สัญญาณรวม <span class="math">x(t)</span></span><span class="legend"><span><i style="--c:var(--x)"></i>รวม</span><span><i style="--c:var(--prod)"></i>แต่ละพจน์</span></span></figcaption><canvas id="ex-time" data-h="200"></canvas></figure>
+        <div class="wrapc">
+          <figure class="plot"><figcaption><span class="pt"><span class="math">|a<sub>k</sub>|</span></span></figcaption><canvas id="ex-mag" data-h="180"></canvas></figure>
+          <figure class="plot"><figcaption><span class="pt"><span class="math">∠a<sub>k</sub></span> (เรเดียน)</span></figcaption><canvas id="ex-ph" data-h="180"></canvas></figure>
+        </div>
+        <div class="tscroll"><table><thead><tr><th class="m">k</th><th class="m">a<sub>k</sub></th><th class="m">|a<sub>k</sub>|</th><th class="m">∠a<sub>k</sub></th><th>มาจากพจน์</th></tr></thead><tbody id="ex-tbody"></tbody></table></div>
+        <p class="note">เช็กกับสไลด์: เมื่อเปิดครบทุกพจน์จะได้ <span class="math">a₀ = 1</span>, <span class="math">a₁ = 1 − 0.5j</span> (<span class="math">|a₁| = √5/2</span>), <span class="math">a₂ = 0.5∠π/4</span> และ <span class="math">a<sub>−k</sub> = a<sub>k</sub><sup>*</sup></span> ตามสมบัติสัญญาณจริง</p>
+      </section>
+
+      <!-- ============ 05 ============ -->
+      <section class="sec" id="limit">
+        <h2><span class="n">05</span> จาก series ไป transform <span class="th">— ยืดคาบ <span class="math">T → ∞</span></span></h2>
+        <p class="intro">สัญญาณไม่เป็นคาบ = สัญญาณคาบที่คาบยาวเป็นอนันต์ พอ <span class="math">T</span> โตขึ้น เส้นสเปกตรัมจะ<b>ถี่ขึ้น</b> (ระยะห่าง <span class="math">ω₀ = 2π/T</span> แคบลง) และ<b>เตี้ยลง</b> (หารด้วย <span class="math">T</span>) แต่ถ้าคูณกลับด้วย <span class="math">T</span> จะเห็นว่ามันเกาะอยู่บนเส้นโค้งเดิมเสมอ — เส้นโค้งนั้นแหละคือ <span class="math">X(jω)</span></p>
+        <div class="fcard">
+          <p class="ftitle">การเปลี่ยนผ่าน (สมการ 3.16–3.20)</p>
+          <div class="fbig sm math">T a<sub>k</sub> = <span class="bigop"><span class="op">∫</span><span class="lims"><span>T/2</span><span>−T/2</span></span></span> x(t) e<sup>−jkω₀t</sup> dt <span style="display:inline-block;width:.8em"></span>→<span style="display:inline-block;width:.8em"></span> <span class="box">X(jω) = <span class="bigop"><span class="op">∫</span><span class="lims"><span>∞</span><span>−∞</span></span></span> x(t) e<sup>−jωt</sup> dt</span> <span style="display:inline-block;width:1.4em"></span> x(t) = <span class="frac"><span>1</span><span>2π</span></span> <span class="bigop"><span class="op">∫</span><span class="lims"><span>∞</span><span>−∞</span></span></span> X(jω) e<sup>jωt</sup> dω</div>
+          <div class="legend-sym">
+            <div><span class="s">kω₀ → ω</span><span>ความถี่จาก “เป็นเส้น ๆ” กลายเป็นต่อเนื่อง</span></div>
+            <div><span class="s">1/T → dω/2π</span><span>ผลรวมกลายเป็นอินทิกรัล</span></div>
+            <div><span class="s">T a<sub>k</sub> → X(jω)</span><span>สเปกตรัมต่อหนึ่งหน่วยความถี่</span></div>
+            <div><span class="s">X(j0)</span><span>= พื้นที่ใต้กราฟ <span class="math">x(t)</span> ทั้งหมด</span></div>
+          </div>
+        </div>
+        <div class="ctrls">
+          <label class="ctrl"><span>คาบ <span class="math">T</span></span><input type="range" id="lm-t" min="2" max="24" step="1" value="4"><output id="lm-tv">4</output></label>
+          <label class="chk"><input type="checkbox" id="lm-scale"> คูณกลับด้วย <span class="math">T</span> (ดูเส้นโค้งซ่อนอยู่)</label>
+          <span class="mini">พัลส์กว้าง <span class="math">τ = 1</span> คงที่</span>
+        </div>
+        <figure class="plot"><figcaption><span class="pt">โดเมนเวลา — พัลส์เทรนคาบ <span class="math">T</span></span></figcaption><canvas id="lm-time" data-h="170"></canvas></figure>
+        <figure class="plot"><figcaption><span class="pt">สเปกตรัม <span class="math" id="lm-ylab">a<sub>n</sub></span> เทียบกับ <span class="math">ω = nω₀</span></span><span class="legend"><span><i style="--c:var(--mark)"></i>เส้นสเปกตรัม</span><span><i class="dash" style="--c:var(--prod)"></i>เส้นโค้งซองสัญญาณ <span class="math">sinc(ω/2)</span></span></span></figcaption><canvas id="lm-spec" data-h="230"></canvas></figure>
+        <div class="out"><div class="l"><div class="math" id="lm-eq"></div><div class="sub">ผลลัพธ์สุดท้าย: <span class="math">rect(t) ↔ sinc(ω/2)</span> — พัลส์แคบในเวลา = สเปกตรัมกว้างในความถี่ เสมอ</div></div><div class="r small" id="lm-val"></div></div>
+      </section>
+
+      <!-- ============ 06 ============ -->
+      <section class="sec" id="ctft">
+        <h2><span class="n">06</span> คู่ transform ที่ต้องจำ <span class="th">— และหน้าตาของมัน</span></h2>
+        <p class="intro">เลือกสัญญาณแล้วดูสามกราฟพร้อมกัน: รูปในเวลา, <span class="math">|X(jω)|</span> และ <span class="math">∠X(jω)</span> สังเกตกฎเดียวที่ใช้ได้เสมอ — <b>แคบในเวลา ⇄ กว้างในความถี่</b></p>
+        <div class="ctrls">
+          <label class="ctrl"><span>สัญญาณ</span><select id="ft-sig">
+            <option value="rect">rect(t/τ) — พัลส์สี่เหลี่ยม (Ex 3.4)</option>
+            <option value="exp">e^(−at)u(t) — เอ็กซ์โปเนนเชียลลด (Ex 3.5)</option>
+            <option value="dexp">e^(−a|t|) — สองด้าน</option>
+            <option value="tri">สามเหลี่ยม 1 − |t|/a</option>
+            <option value="delta">δ(t) — อิมพัลส์</option>
+            <option value="cos">cos(ω₀t) — สัญญาณคาบ</option>
+          </select></label>
+          <label class="ctrl"><span id="ft-plab">พารามิเตอร์</span><input type="range" id="ft-p" min="0.25" max="4" step="0.05" value="1"><output id="ft-pv">1.00</output></label>
+        </div>
+        <figure class="plot"><figcaption><span class="pt">โดเมนเวลา <span class="math">x(t)</span></span></figcaption><canvas id="ft-time" data-h="190"></canvas></figure>
+        <div class="wrapc">
+          <figure class="plot"><figcaption><span class="pt">ขนาด <span class="math">|X(jω)|</span></span></figcaption><canvas id="ft-mag" data-h="190"></canvas></figure>
+          <figure class="plot"><figcaption><span class="pt">เฟส <span class="math">∠X(jω)</span></span></figcaption><canvas id="ft-ph" data-h="190"></canvas></figure>
+        </div>
+        <div class="out"><div class="l"><div class="math fbig sm" id="ft-formula"></div><div class="sub" id="ft-note"></div></div></div>
+      </section>
+
+      <!-- ============ 07 ============ -->
+      <section class="sec" id="props">
+        <h2><span class="n">07</span> สมบัติที่ใช้ทำข้อสอบ <span class="th">— เลื่อนเวลา &amp; ย่อ/ขยายเวลา</span></h2>
+        <p class="intro">สองสไลเดอร์นี้สรุปสมบัติที่ออกสอบบ่อยที่สุด: <b>เลื่อนเวลา</b> ไม่เปลี่ยนขนาดสเปกตรัมเลย เปลี่ยนแค่เฟสเป็นเส้นตรง (<span class="math">e<sup>−jωt₀</sup></span>) ส่วน <b>ย่อเวลา</b> (a &gt; 1) ทำให้สเปกตรัมกว้างขึ้นและเตี้ยลง</p>
+        <div class="ctrls">
+          <label class="ctrl"><span>เลื่อน <span class="math">t₀</span></span><input type="range" id="pr-t0" min="-2" max="2" step="0.05" value="0"><output id="pr-t0v">0.00</output></label>
+          <label class="ctrl"><span>สเกล <span class="math">a</span></span><input type="range" id="pr-a" min="0.4" max="3" step="0.05" value="1"><output id="pr-av">1.00</output></label>
+        </div>
+        <figure class="plot"><figcaption><span class="pt"><span class="math">x(a(t − t₀))</span> — พัลส์กว้าง 1</span></figcaption><canvas id="pr-time" data-h="170"></canvas></figure>
+        <div class="wrapc">
+          <figure class="plot"><figcaption><span class="pt"><span class="math">|X(jω)|</span></span><span class="legend"><span><i class="dash" style="--c:var(--axis)"></i>ต้นฉบับ</span><span><i style="--c:var(--mark)"></i>หลังเปลี่ยน</span></span></figcaption><canvas id="pr-mag" data-h="180"></canvas></figure>
+          <figure class="plot"><figcaption><span class="pt"><span class="math">∠X(jω)</span></span></figcaption><canvas id="pr-ph" data-h="180"></canvas></figure>
+        </div>
+        <div class="out"><div class="l"><div class="math" id="pr-eq"></div><div class="sub">เฟสที่เอียงเป็นเส้นตรงคือ “สัญญาณมาช้า/เร็วเท่าไหร่” — ความชันของเฟส = <span class="math">−t₀</span></div></div></div>
+        <div class="tscroll"><table>
+          <thead><tr><th>สมบัติ</th><th class="m">x(t)</th><th class="m">X(jω)</th><th>ใช้ตอนไหน</th></tr></thead>
+          <tbody>
+            <tr><td>Linearity</td><td class="m">a x₁(t) + b x₂(t)</td><td class="m">a X₁(jω) + b X₂(jω)</td><td>แตกสัญญาณเป็นชิ้นที่รู้คำตอบแล้ว</td></tr>
+            <tr><td>Time shift</td><td class="m">x(t − t₀)</td><td class="m">e<sup>−jωt₀</sup> X(jω)</td><td>ขนาดเท่าเดิม เฟสเพิ่มเชิงเส้น</td></tr>
+            <tr><td>Freq. shift</td><td class="m">e<sup>jω₀t</sup> x(t)</td><td class="m">X(j(ω − ω₀))</td><td>การมอดูเลต / ย้ายแถบความถี่</td></tr>
+            <tr><td>Scaling</td><td class="m">x(at)</td><td class="m"><span class="frac"><span>1</span><span>|a|</span></span> X(jω/a)</td><td>ย่อเวลา = ขยายความถี่</td></tr>
+            <tr><td>Convolution</td><td class="m">x(t) ∗ h(t)</td><td class="m">X(jω) H(jω)</td><td>หัวใจของการกรองสัญญาณ (Lecture 05)</td></tr>
+            <tr><td>Multiplication</td><td class="m">x(t) y(t)</td><td class="m"><span class="frac"><span>1</span><span>2π</span></span> X ∗ Y</td><td>การสุ่มสัญญาณ (sampling)</td></tr>
+            <tr><td>Differentiation</td><td class="m">dx/dt</td><td class="m">jω X(jω)</td><td>ตัวกรองเน้นขอบ (differencing filter)</td></tr>
+            <tr><td>Duality</td><td class="m">X(t)</td><td class="m">2π x(−jω)</td><td>ใช้ตารางย้อนกลับ (Ex 3.7)</td></tr>
+            <tr><td>Conjugate sym.</td><td class="m">x(t) จริง</td><td class="m">X(−jω) = X<sup>*</sup>(jω)</td><td>ทำไมสเปกตรัมถึงสมมาตร</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <footer>
+        <span>อ้างอิง: CP203 Lecture 03 (สไลด์ 66–104) · Oppenheim &amp; Willsky บทที่ 4 · Soliman &amp; Srinath บทที่ 3–4</span>
+        <span>กราฟทั้งหมดคำนวณสด ๆ ในหน้านี้</span>
+      </footer>
+    </main>
+  </div>
+</div>
+
+<script>
+/* ===== shared kit: plots, steppers, controls (CEMII lecture pages) ===== */
+const K = (function(){
+'use strict';
+const MINUS = '−', TAU = Math.PI * 2;
+const C = {};
+const TOKENS = ['ink','muted','line','grid','axis','x','h','mark','prod','y','amber','surface','sunk'];
+function readColors(){ const cs = getComputedStyle(document.documentElement); TOKENS.forEach(k => { C[k] = cs.getPropertyValue('--'+k).trim() || '#888'; }); }
+readColors();
+
+/* ---------- numbers ---------- */
+function fmt(v, d){
+  if (d == null) d = 3;
+  if (!isFinite(v)) return (v < 0 ? MINUS : '') + '∞';
+  if (Math.abs(v) < 1e-10) v = 0;
+  const a = Math.abs(v), s = Number.isInteger(a) ? String(a) : String(+a.toFixed(d));
+  return (v < 0 && +s !== 0 ? MINUS : '') + s;
+}
+const fx = (v, d) => (v < 0 && Math.abs(v) >= Math.pow(10, -(d || 2)) / 2 ? MINUS : '') + Math.abs(v).toFixed(d == null ? 2 : d);
+function piLabel(v){
+  const k = v / Math.PI;
+  if (Math.abs(k) < 1e-9) return '0';
+  const q = Math.round(k * 4);
+  if (Math.abs(q - k * 4) > 1e-6) return fmt(v, 2);
+  const sg = q < 0 ? MINUS : '';
+  let num = Math.abs(q), den = 4;
+  const g = (a, b) => b ? g(b, a % b) : a;
+  const d = g(num, den); num /= d; den /= d;
+  return sg + (num === 1 ? 'π' : num + 'π') + (den === 1 ? '' : '/' + den);
+}
+function nice(range, target){
+  const raw = range / Math.max(1, target), p = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / p;
+  return (f < 1.5 ? 1 : f < 3 ? 2 : f < 7 ? 5 : 10) * p;
+}
+function rng(lo, hi, pad){
+  pad = pad == null ? .18 : pad;
+  const s = (hi - lo) || 1;
+  return [lo - (lo < 0 ? pad : pad * .5) * s, hi + pad * s];
+}
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+function simpson(f, a, b, n){
+  n = n % 2 ? n + 1 : n;
+  const hh = (b - a) / n; let s = f(a) + f(b);
+  for (let i = 1; i < n; i++) s += (i % 2 ? 4 : 2) * f(a + i * hh);
+  return s * hh / 3;
+}
+/* complex as [re, im] */
+const cadd = (a, b) => [a[0] + b[0], a[1] + b[1]];
+const cmul = (a, b) => [a[0]*b[0] - a[1]*b[1], a[0]*b[1] + a[1]*b[0]];
+const cabs = a => Math.hypot(a[0], a[1]);
+const carg = a => Math.atan2(a[1], a[0]);
+const cexp = th => [Math.cos(th), Math.sin(th)];
+function cstr(a, d){
+  d = d == null ? 3 : d;
+  const re = Math.abs(a[0]) < 5e-4 ? 0 : a[0], im = Math.abs(a[1]) < 5e-4 ? 0 : a[1];
+  if (im === 0) return fmt(re, d);
+  if (re === 0) return (im < 0 ? MINUS : '') + (Math.abs(im) === 1 ? '' : fmt(Math.abs(im), d)) + 'j';
+  return fmt(re, d) + (im < 0 ? ' ' + MINUS + ' ' : ' + ') + (Math.abs(im) === 1 ? '' : fmt(Math.abs(im), d)) + 'j';
+}
+/* DFT of complex array (arrays of [re,im]) — direct, N is small here */
+function dft(x){
+  const N = x.length, X = [];
+  for (let k = 0; k < N; k++){
+    let re = 0, im = 0;
+    for (let n = 0; n < N; n++){
+      const th = -TAU * k * n / N, c = Math.cos(th), s = Math.sin(th);
+      re += x[n][0] * c - x[n][1] * s; im += x[n][0] * s + x[n][1] * c;
+    }
+    X.push([re, im]);
+  }
+  return X;
+}
+
+/* ---------- plot ---------- */
+class Plot {
+  constructor(cv){ this.cv = cv; this.ctx = cv.getContext('2d'); this.h0 = +cv.dataset.h || 200; this.pad = {l:46, r:16, t:20, b:26}; }
+  size(){
+    const w = this.cv.clientWidth; if (!w) return false;
+    const H = Math.round(this.h0 * (w < 520 ? .84 : 1));
+    const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    const W = Math.round(w * dpr), HH = Math.round(H * dpr);
+    if (this.cv.width !== W || this.cv.height !== HH){ this.cv.width = W; this.cv.height = HH; }
+    this.cv.style.height = H + 'px';
+    this.w = w; this.H = H;
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0); this.ctx.clearRect(0, 0, w, H);
+    return true;
+  }
+  view(x0, x1, y0, y1){ this.x0 = x0; this.x1 = x1; this.y0 = y0; this.y1 = y1; return this; }
+  get L(){ return this.pad.l; } get R(){ return this.w - this.pad.r; }
+  get T(){ return this.pad.t; } get B(){ return this.H - this.pad.b; }
+  pw(){ return this.R - this.L; }
+  X(v){ return this.L + (v - this.x0) / (this.x1 - this.x0) * this.pw(); }
+  Y(v){ return this.T + (this.y1 - v) / (this.y1 - this.y0) * (this.B - this.T); }
+  inv(px){ return this.x0 + (px - this.L) / this.pw() * (this.x1 - this.x0); }
+  frame(o){
+    o = o || {}; const c = this.ctx; c.save();
+    const pi = !!o.piTick;
+    const tick = o.tick || (pi ? Math.PI / 2 : nice(this.x1 - this.x0, Math.max(4, this.pw() / 64)));
+    const grid = o.grid || tick / 2;
+    const ys = o.yTick || nice(this.y1 - this.y0, o.yT || 4);
+    c.lineWidth = 1; c.strokeStyle = C.grid; c.beginPath();
+    for (let i = Math.ceil(this.x0 / grid - 1e-9); i * grid <= this.x1 + 1e-9; i++){ const px = Math.round(this.X(i * grid)) + .5; c.moveTo(px, this.T); c.lineTo(px, this.B); }
+    for (let i = Math.ceil(this.y0 / ys - 1e-9); i * ys <= this.y1 + 1e-9; i++){ const py = Math.round(this.Y(i * ys)) + .5; c.moveTo(this.L, py); c.lineTo(this.R, py); }
+    c.stroke();
+    c.strokeStyle = C.axis; c.beginPath();
+    const p0 = Math.round(this.Y(0)) + .5; c.moveTo(this.L, p0); c.lineTo(this.R, p0);
+    if (this.x0 < 0 && this.x1 > 0){ const q = Math.round(this.X(0)) + .5; c.moveTo(q, this.T); c.lineTo(q, this.B); }
+    c.stroke();
+    c.fillStyle = C.muted; c.font = '11px "IBM Plex Mono", ui-monospace, monospace';
+    c.textAlign = 'center'; c.textBaseline = 'top';
+    for (let i = Math.ceil(this.x0 / tick - 1e-9); i * tick <= this.x1 + 1e-9; i++){
+      const v = i * tick; if (o.skip0 && Math.abs(v) < 1e-9) continue;
+      c.fillText(pi ? piLabel(v) : fmt(v, 2), this.X(v), this.B + 8);
+    }
+    if (!o.noY){
+      c.textAlign = 'right'; c.textBaseline = 'middle';
+      for (let i = Math.ceil(this.y0 / ys - 1e-9); i * ys <= this.y1 + 1e-9; i++) c.fillText(fmt(i * ys, 2), this.L - 8, this.Y(i * ys));
+    }
+    if (o.xl){ c.font = 'italic 14px "STIX Two Text", serif'; c.fillStyle = C.ink; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(o.xl, this.R + 3, this.Y(0)); }
+    c.restore(); return this;
+  }
+  clip(){ const c = this.ctx; c.save(); c.beginPath(); c.rect(this.L, this.T - 8, this.pw(), this.B - this.T + 16); c.clip(); }
+  unclip(){ this.ctx.restore(); }
+  curve(pts, col, w, o){
+    o = o || {}; if (!pts.length) return this; const c = this.ctx; this.clip();
+    c.globalAlpha = o.alpha == null ? 1 : o.alpha; c.strokeStyle = col; c.lineWidth = w || 2; c.lineJoin = 'round'; c.lineCap = 'round';
+    if (o.dash) c.setLineDash(o.dash);
+    const yc = v => clamp(this.Y(v), -5000, 5000);
+    c.beginPath(); let down = false;
+    pts.forEach(p => { if (p == null || !isFinite(p[1])){ down = false; return; } const X = this.X(p[0]), Y = yc(p[1]); if (down) c.lineTo(X, Y); else { c.moveTo(X, Y); down = true; } });
+    c.stroke(); this.unclip(); return this;
+  }
+  area(pts, col, al){
+    if (!pts.length) return this; const c = this.ctx; this.clip();
+    const yc = v => clamp(this.Y(v), -5000, 5000);
+    c.globalAlpha = al == null ? .25 : al; c.fillStyle = col; c.beginPath(); c.moveTo(this.X(pts[0][0]), this.Y(0));
+    pts.forEach(p => c.lineTo(this.X(p[0]), yc(p[1]))); c.lineTo(this.X(pts[pts.length-1][0]), this.Y(0)); c.closePath(); c.fill();
+    this.unclip(); return this;
+  }
+  stem(k, v, col, o){
+    o = o || {}; const c = this.ctx; const px = this.X(k) + (o.dx || 0), p0 = this.Y(0), p1 = clamp(this.Y(v), this.T - 6, this.B + 6);
+    if (px < this.L - 6 || px > this.R + 6) return this;
+    c.save(); c.globalAlpha = o.alpha == null ? 1 : o.alpha; c.strokeStyle = col; c.fillStyle = col; c.lineWidth = o.w || 2;
+    if (Math.abs(v) > 1e-12){ c.beginPath(); c.moveTo(px, p0); c.lineTo(px, p1); c.stroke(); }
+    c.beginPath(); c.arc(px, p1, o.r == null ? 3.4 : o.r, 0, TAU); c.fill();
+    if (o.ring){ c.strokeStyle = o.ring; c.lineWidth = 2; c.beginPath(); c.arc(px, p1, (o.r == null ? 3.4 : o.r) + 3.5, 0, TAU); c.stroke(); }
+    if (o.label != null){ c.font = '600 10.5px "IBM Plex Mono", monospace'; c.textAlign = 'center'; c.textBaseline = v >= 0 ? 'bottom' : 'top'; c.fillText(o.label, px, v >= 0 ? p1 - 6 : p1 + 6); }
+    c.restore(); return this;
+  }
+  arrow(x, v, col, o){ /* impulse arrow */
+    o = o || {}; const c = this.ctx, px = this.X(x), p0 = this.Y(0), p1 = this.Y(v);
+    if (px < this.L - 4 || px > this.R + 4) return this;
+    c.save(); c.strokeStyle = col; c.fillStyle = col; c.lineWidth = o.w || 2;
+    c.beginPath(); c.moveTo(px, p0); c.lineTo(px, p1); c.stroke();
+    const d = v >= 0 ? 1 : -1;
+    c.beginPath(); c.moveTo(px, p1); c.lineTo(px - 4.5, p1 + 8 * d); c.lineTo(px + 4.5, p1 + 8 * d); c.closePath(); c.fill();
+    if (o.label){ c.font = '600 10.5px "IBM Plex Mono", monospace'; c.textAlign = 'center'; c.textBaseline = v >= 0 ? 'bottom' : 'top'; c.fillText(o.label, px, v >= 0 ? p1 - 10 : p1 + 10); }
+    c.restore(); return this;
+  }
+  dot(x, y, col, r){ const c = this.ctx; c.save(); c.fillStyle = col; c.beginPath(); c.arc(this.X(x), clamp(this.Y(y), this.T - 4, this.B + 4), r || 3, 0, TAU); c.fill(); c.restore(); return this; }
+  point(x, y, col, ring){ const c = this.ctx; c.save(); c.fillStyle = col; c.beginPath(); c.arc(this.X(x), clamp(this.Y(y), this.T, this.B), 5, 0, TAU); c.fill(); if (ring){ c.strokeStyle = ring; c.lineWidth = 2; c.beginPath(); c.arc(this.X(x), clamp(this.Y(y), this.T, this.B), 9, 0, TAU); c.stroke(); } c.restore(); return this; }
+  vline(x, col, label, o){
+    o = o || {}; const c = this.ctx, px = Math.round(this.X(x)) + .5; if (px < this.L - 1 || px > this.R + 1) return this;
+    c.save(); c.strokeStyle = col; c.lineWidth = o.w || 1.2; if (o.dash !== false) c.setLineDash(o.dash || [4, 4]);
+    c.beginPath(); c.moveTo(px, this.T - 2); c.lineTo(px, this.B); c.stroke(); c.setLineDash([]);
+    if (label){ c.fillStyle = col; c.font = '500 11.5px "IBM Plex Mono", monospace'; c.textBaseline = 'bottom'; const right = px > this.R - 62; c.textAlign = right ? 'right' : 'left'; c.fillText(label, px + (right ? -5 : 5), this.T - 3); }
+    c.restore(); return this;
+  }
+  band(a, b, col, al){ const c = this.ctx; c.save(); c.globalAlpha = al == null ? .1 : al; c.fillStyle = col; const x0 = Math.max(this.L, this.X(a)), x1 = Math.min(this.R, this.X(b)); if (x1 > x0) c.fillRect(x0, this.T, x1 - x0, this.B - this.T); c.restore(); return this; }
+  text(s, x, y, col, o){
+    o = o || {}; const c = this.ctx; c.save(); c.fillStyle = col;
+    c.font = o.font || '500 12px "IBM Plex Sans Thai", sans-serif';
+    c.textAlign = o.align || 'center'; c.textBaseline = o.base || 'middle';
+    c.fillText(s, x, y); c.restore(); return this;
+  }
+  label(s, x, y, col, o){ return this.text(s, this.X(x), this.Y(y), col, o); }
+}
+
+/* ---------- figure registry ---------- */
+const FIGS = [];
+function fig(id, draw){
+  const cv = document.getElementById(id); if (!cv) return null;
+  const p = new Plot(cv); FIGS.push({p, draw, cv}); return p;
+}
+let raf = 0;
+function redraw(){ if (raf) return; raf = requestAnimationFrame(() => { raf = 0; FIGS.forEach(f => { if (f.cv.offsetParent === null && f.cv.clientWidth === 0) return; if (f.p.size()) f.draw(f.p); }); }); }
+const $ = s => document.querySelector(s);
+const $$ = s => Array.prototype.slice.call(document.querySelectorAll(s));
+function val(sel){ const e = $(sel); return e ? +e.value : 0; }
+function sval(sel){ const e = $(sel); return e ? e.value : ''; }
+function chk(sel){ const e = $(sel); return !!(e && e.checked); }
+function bind(sel, fn){
+  $$(sel).forEach(e => e.addEventListener('input', ev => { if (fn) fn(ev); redraw(); }));
+}
+function out(sel, text){ const e = $(sel); if (e) e.textContent = text; }
+function html(sel, s){ const e = $(sel); if (e) e.innerHTML = s; }
+
+/* ---------- derivation steppers ---------- */
+function derivInit(){
+  $$('.deriv').forEach(list => {
+    const items = Array.prototype.slice.call(list.children);
+    const nav = document.createElement('div'); nav.className = 'dnav';
+    nav.innerHTML = '<button class="btn sm" type="button" data-a="prev">‹ ก่อนหน้า</button>'
+      + '<button class="btn sm primary" type="button" data-a="next">ขั้นถัดไป ›</button>'
+      + '<span class="cnt"></span><button class="btn sm" type="button" data-a="all">แสดงทั้งหมด</button>';
+    list.parentNode.insertBefore(nav, list.nextSibling);
+    let i = 1;
+    function render(){
+      items.forEach((li, k) => li.classList.toggle('dim', k >= i));
+      nav.querySelector('.cnt').textContent = `ขั้นที่ ${Math.min(i, items.length)} / ${items.length}`;
+      nav.querySelector('[data-a=prev]').disabled = i <= 1;
+      nav.querySelector('[data-a=next]').disabled = i >= items.length;
+    }
+    nav.addEventListener('click', e => {
+      const a = e.target.closest('[data-a]'); if (!a) return;
+      if (a.dataset.a === 'next') i = Math.min(items.length, i + 1);
+      else if (a.dataset.a === 'prev') i = Math.max(1, i - 1);
+      else i = items.length;
+      render();
+    });
+    render();
+  });
+}
+
+/* ---------- table of contents scrollspy ---------- */
+function tocInit(){
+  const links = $$('.toc a'); if (!links.length) return;
+  const secs = links.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(en => {
+      if (!en.isIntersecting) return;
+      links.forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + en.target.id));
+    });
+  }, {rootMargin: '-10% 0px -70% 0px', threshold: 0});
+  secs.forEach(s => io.observe(s));
+}
+
+/* ---------- animation loop helper ---------- */
+function ticker(step){
+  let on = false, last = 0, id = 0;
+  function frame(now){
+    if (!on) return;
+    const dt = Math.min(.05, (now - last) / 1000); last = now;
+    step(dt); redraw(); id = requestAnimationFrame(frame);
+  }
+  return {
+    start(){ if (on) return; on = true; last = performance.now(); id = requestAnimationFrame(frame); },
+    stop(){ on = false; if (id) cancelAnimationFrame(id); id = 0; },
+    toggle(){ on ? this.stop() : this.start(); return on; },
+    get running(){ return on; }
+  };
+}
+
+/* ---------- boot ---------- */
+function boot(){
+  derivInit(); tocInit(); redraw();
+  const onTheme = () => { readColors(); redraw(); };
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', onTheme);
+  new MutationObserver(onTheme).observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
+  if (window.ResizeObserver) new ResizeObserver(() => redraw()).observe(document.body);
+  else window.addEventListener('resize', redraw);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(redraw);
+}
+
+return {C, MINUS, TAU, fmt, fx, piLabel, nice, rng, clamp, simpson, cadd, cmul, cabs, carg, cexp, cstr, dft,
+        Plot, fig, redraw, $, $$, val, sval, chk, bind, out, html, ticker, boot, readColors};
+})();
+
+(function(){
+'use strict';
+const {fmt, fx, cabs, carg, cstr, MINUS, TAU} = K;
+const sinc = x => Math.abs(x) < 1e-9 ? 1 : Math.sin(x) / x;
+const PI = Math.PI;
+
+/* ===== 01 eigenfunction ===== */
+K.fig('eg-time', p => {
+  const w = K.val('#eg-w'), rc = K.val('#eg-rc');
+  const H = [1 / (1 + Math.pow(w * rc, 2)), -w * rc / (1 + Math.pow(w * rc, 2))];
+  const mag = cabs(H), ph = carg(H);
+  p.view(0, 14, -1.35, 1.35).frame({tick: 2, yT: 3, xl: 't'});
+  const pts = [], out = [];
+  for (let i = 0; i <= 700; i++){ const t = 14 * i / 700; pts.push([t, Math.cos(w * t)]); out.push([t, mag * Math.cos(w * t + ph)]); }
+  p.curve(pts, K.C.x, 2).curve(out, K.C.y, 2.6);
+  K.html('#eg-eq', `cos(ωt) → ${fmt(mag, 3)} · cos(ωt ${ph < 0 ? MINUS : '+'} ${fmt(Math.abs(ph), 3)})`);
+  K.out('#eg-val', `|H| = ${fmt(mag, 3)}`);
+  K.out('#eg-wv', fx(w)); K.out('#eg-rcv', fx(rc));
+});
+K.bind('#eg-w'); K.bind('#eg-rc');
+
+/* ===== 02 Fourier series ===== */
+const T0 = 2, W0 = TAU / T0, KMAX = 40;
+function waveFn(){
+  const kind = K.sval('#fs-wave'), d = K.val('#fs-duty');
+  const wrap = t => { let u = (t + T0 / 2) % T0; if (u < 0) u += T0; return u - T0 / 2; }; // -1..1
+  if (kind === 'square') return t => wrap(t) < 0 ? -1 : 1;
+  if (kind === 'saw') return t => wrap(t);
+  if (kind === 'tri') return t => 1 - 2 * Math.abs(wrap(t));
+  if (kind === 'pulse') return t => Math.abs(wrap(t)) <= d ? 1 : 0;
+  return t => { const u = wrap(t); return u >= 0 ? Math.sin(PI * u) : 0; };
+}
+let coefCache = {key:'', a:null};
+function coefs(){
+  const key = K.sval('#fs-wave') + '|' + K.val('#fs-duty');
+  if (coefCache.key === key) return coefCache.a;
+  const f = waveFn(), N = 2400, a = {};
+  for (let k = -KMAX; k <= KMAX; k++){
+    let re = 0, im = 0;
+    for (let i = 0; i < N; i++){
+      const t = -T0 / 2 + T0 * (i + .5) / N, v = f(t), th = -k * W0 * t;
+      re += v * Math.cos(th); im += v * Math.sin(th);
+    }
+    a[k] = [re / N, im / N];   // (1/T)∫ ≈ average over period
+  }
+  coefCache = {key, a}; return a;
+}
+function partial(a, N, t){
+  let s = a[0][0];
+  for (let k = 1; k <= N; k++) s += 2 * (a[k][0] * Math.cos(k * W0 * t) - a[k][1] * Math.sin(k * W0 * t));
+  return s;
+}
+K.fig('fs-time', p => {
+  const a = coefs(), f = waveFn(), N = K.val('#fs-n'), showH = K.chk('#fs-harm');
+  const L = -1.6 * T0, R = 1.6 * T0;
+  p.view(L, R, -1.75, 1.75).frame({tick: 1, grid: .5, yT: 3, xl: 't'});
+  const orig = [], sum = [];
+  for (let i = 0; i <= 900; i++){ const t = L + (R - L) * i / 900; orig.push([t, f(t)]); sum.push([t, partial(a, N, t)]); }
+  p.curve(orig, K.C.axis, 1.6, {dash:[5, 4], alpha:.9});
+  if (showH){
+    for (let k = 1; k <= Math.min(N, 12); k++){
+      const h = [];
+      for (let i = 0; i <= 500; i++){ const t = L + (R - L) * i / 500; h.push([t, 2 * (a[k][0] * Math.cos(k * W0 * t) - a[k][1] * Math.sin(k * W0 * t))]); }
+      p.curve(h, K.C.prod, 1.2, {alpha:.5});
+    }
+    if (Math.abs(a[0][0]) > 1e-6) p.curve([[L, a[0][0]], [R, a[0][0]]], K.C.prod, 1.2, {alpha:.5});
+  }
+  p.curve(sum, K.C.y, 2.6);
+  let err = 0;
+  for (let i = 0; i <= 600; i++){ const t = L + (R - L) * i / 600; err = Math.max(err, Math.abs(partial(a, N, t) - f(t))); }
+  K.out('#fs-err', 'คลาดเคลื่อนสูงสุด ' + fmt(err, 3));
+  K.html('#fs-eq', `x<sub>N</sub>(t) = a₀ + 2 Σ<sub>k=1</sub><sup>${N}</sup> |a<sub>k</sub>| cos(kω₀t + ∠a<sub>k</sub>)`);
+  K.html('#fs-sub', `ω₀ = 2π/T = ${fmt(W0, 3)} rad/s (T = 2) · ใช้ทั้งหมด ${2 * N + 1} พจน์ (k = ${MINUS}${N} … ${N})`);
+  K.out('#fs-nv', String(N)); K.out('#fs-dutyv', fx(K.val('#fs-duty')));
+});
+K.fig('fs-mag', p => {
+  const a = coefs(); let mx = 0;
+  for (let k = -12; k <= 12; k++) mx = Math.max(mx, cabs(a[k]));
+  p.view(-12.8, 12.8, -.08 * mx, 1.25 * mx || 1).frame({tick: 2, grid: 1, yT: 3, xl: 'k'});
+  const N = K.val('#fs-n');
+  for (let k = -12; k <= 12; k++) p.stem(k, cabs(a[k]), Math.abs(k) <= N ? K.C.mark : K.C.axis, {alpha: Math.abs(k) <= N ? 1 : .45});
+});
+K.fig('fs-ph', p => {
+  const a = coefs(), N = K.val('#fs-n');
+  p.view(-12.8, 12.8, -PI * 1.25, PI * 1.25).frame({tick: 2, grid: 1, yTick: PI / 2, xl: 'k'});
+  for (let k = -12; k <= 12; k++){
+    const m = cabs(a[k]); if (m < 1e-6) { p.dot(k, 0, K.C.axis, 2); continue; }
+    p.stem(k, carg(a[k]), Math.abs(k) <= N ? K.C.amber : K.C.axis, {alpha: Math.abs(k) <= N ? 1 : .45});
+  }
+});
+K.bind('#fs-wave'); K.bind('#fs-n'); K.bind('#fs-duty'); K.bind('#fs-harm');
+
+/* ===== 03 wrap-around ===== */
+K.fig('ak-wrap', p => {
+  const a = coefs(), f = waveFn(), k = K.val('#ak-k');
+  let mx = .2;
+  const pts = [];
+  for (let i = 0; i <= 900; i++){
+    const t = -T0 / 2 + T0 * i / 900, v = f(t), th = -k * W0 * t;
+    const z = [v * Math.cos(th), v * Math.sin(th)];
+    pts.push(z); mx = Math.max(mx, cabs(z));
+  }
+  const asp = p.pw() / (p.H - p.pad.t - p.pad.b), R = mx * 1.25;
+  p.view(-R * asp, R * asp, -R, R).frame({yT: 3, tick: K.nice(2 * R * asp, 6), noY: false});
+  p.text('Re', p.R - 4, p.Y(0) - 10, K.C.muted, {align:'right', font:'italic 13px "STIX Two Text", serif'});
+  p.text('Im', p.X(0) + 12, p.T + 8, K.C.muted, {align:'left', font:'italic 13px "STIX Two Text", serif'});
+  p.curve(pts.map(z => [z[0], z[1]]), K.C.prod, 1.8, {alpha:.9});
+  const ak = a[k];
+  p.point(ak[0], ak[1], K.C.mark, K.C.surface);
+  p.curve([[0, 0], [ak[0], ak[1]]], K.C.mark, 1.6, {dash:[4, 3]});
+  K.out('#ak-kv', String(k));
+  K.html('#ak-eq', `a<sub>${k}</sub> = ${cstr(ak, 3)}`);
+  K.html('#ak-sub', `|a<sub>${k}</sub>| = ${fmt(cabs(ak), 3)} · ∠a<sub>${k}</sub> = ${fmt(carg(ak), 3)} rad — ` + (cabs(ak) < .02 ? 'เส้นม้วนกระจายรอบศูนย์กลาง จุดศูนย์ถ่วงเลยเป็นศูนย์ = ไม่มีฮาร์มอนิกนี้' : 'จุดศูนย์ถ่วงเบนออกจากศูนย์กลาง = มีฮาร์มอนิกนี้อยู่จริง'));
+  K.out('#ak-val', '|a| = ' + fmt(cabs(ak), 3));
+});
+K.fig('ak-int', p => {
+  const f = waveFn(), k = K.val('#ak-k');
+  const re = [], im = [];
+  for (let i = 0; i <= 700; i++){
+    const t = -T0 / 2 + T0 * i / 700, v = f(t), th = -k * W0 * t;
+    re.push([t, v * Math.cos(th)]); im.push([t, v * Math.sin(th)]);
+  }
+  p.view(-T0 / 2, T0 / 2, -1.6, 1.6).frame({tick: .5, grid: .25, yT: 3, xl: 't'});
+  p.area(re, K.C.x, .12).curve(re, K.C.x, 2);
+  p.area(im, K.C.h, .12).curve(im, K.C.h, 2);
+});
+K.bind('#ak-k');
+
+/* ===== 04 Exercise 3.2 ===== */
+function exTerms(){
+  const t = [];
+  if (K.chk('#e1')) t.push({label:'1', k:0, amp:1, ph:0, f: () => 1});
+  if (K.chk('#e2')) t.push({label:'sin(ω₀t)', k:1, amp:1, ph:-PI / 2, f: x => Math.sin(W0 * x)});
+  if (K.chk('#e3')) t.push({label:'2cos(ω₀t)', k:1, amp:2, ph:0, f: x => 2 * Math.cos(W0 * x)});
+  if (K.chk('#e4')) t.push({label:'cos(2ω₀t + π/4)', k:2, amp:1, ph:PI / 4, f: x => Math.cos(2 * W0 * x + PI / 4)});
+  return t;
+}
+function exCoefs(){
+  const a = {}, src = {};
+  for (let k = -3; k <= 3; k++) a[k] = [0, 0];
+  exTerms().forEach(tm => {
+    if (tm.k === 0){ a[0] = [a[0][0] + tm.amp, a[0][1]]; (src[0] = src[0] || []).push(tm.label); return; }
+    const h = tm.amp / 2;
+    a[tm.k] = [a[tm.k][0] + h * Math.cos(tm.ph), a[tm.k][1] + h * Math.sin(tm.ph)];
+    a[-tm.k] = [a[-tm.k][0] + h * Math.cos(tm.ph), a[-tm.k][1] - h * Math.sin(tm.ph)];
+    (src[tm.k] = src[tm.k] || []).push(tm.label); (src[-tm.k] = src[-tm.k] || []).push(tm.label);
+  });
+  return {a, src};
+}
+K.fig('ex-time', p => {
+  const terms = exTerms();
+  p.view(-2.2, 2.2, -4.2, 4.6).frame({tick: .5, grid: .5, yT: 3, xl: 't'});
+  terms.forEach(tm => {
+    const pts = []; for (let i = 0; i <= 500; i++){ const t = -2.2 + 4.4 * i / 500; pts.push([t, tm.f(t)]); }
+    p.curve(pts, K.C.prod, 1.2, {alpha:.5});
+  });
+  const sum = []; for (let i = 0; i <= 700; i++){ const t = -2.2 + 4.4 * i / 700; sum.push([t, terms.reduce((s, tm) => s + tm.f(t), 0)]); }
+  p.curve(sum, K.C.x, 2.6);
+});
+K.fig('ex-mag', p => {
+  const {a} = exCoefs(); let mx = .5;
+  for (let k = -3; k <= 3; k++) mx = Math.max(mx, cabs(a[k]));
+  p.view(-3.6, 3.6, -.08 * mx, 1.3 * mx).frame({tick: 1, grid: 1, yT: 3, xl: 'k'});
+  for (let k = -3; k <= 3; k++) p.stem(k, cabs(a[k]), K.C.mark, {label: cabs(a[k]) > 1e-6 ? fmt(cabs(a[k]), 2) : null});
+});
+K.fig('ex-ph', p => {
+  const {a} = exCoefs();
+  p.view(-3.6, 3.6, -PI * 1.3, PI * 1.3).frame({tick: 1, grid: 1, yTick: PI / 2, xl: 'k'});
+  for (let k = -3; k <= 3; k++){
+    if (cabs(a[k]) < 1e-6){ p.dot(k, 0, K.C.axis, 2.4); continue; }
+    p.stem(k, carg(a[k]), K.C.amber, {label: fmt(carg(a[k]), 2)});
+  }
+  const tb = K.$('#ex-tbody');
+  if (tb){
+    let html = '';
+    for (let k = 3; k >= -3; k--){
+      const z = a[k]; if (cabs(z) < 1e-9) continue;
+      html += `<tr><td class="m">${k}</td><td class="m">${cstr(z, 3)}</td><td class="num">${fmt(cabs(z), 3)}</td><td class="num">${fmt(carg(z), 3)}</td><td class="mini">${(exCoefs().src[k] || []).join(' + ')}</td></tr>`;
+    }
+    tb.innerHTML = html || '<tr><td colspan="5" class="mini">ยังไม่ได้เลือกพจน์ไหนเลย</td></tr>';
+  }
+});
+['#e1', '#e2', '#e3', '#e4'].forEach(s => K.bind(s));
+
+/* ===== 05 T → ∞ ===== */
+K.fig('lm-time', p => {
+  const T = K.val('#lm-t');
+  p.view(-13, 13, -.35, 1.45).frame({tick: 2, grid: 1, yT: 2, xl: 't'});
+  const pts = [];
+  for (let i = 0; i <= 1600; i++){
+    const t = -13 + 26 * i / 1600;
+    let u = (t + T / 2) % T; if (u < 0) u += T; u -= T / 2;
+    pts.push([t, Math.abs(u) <= .5 ? 1 : 0]);
+  }
+  p.curve(pts, K.C.x, 2.2);
+  K.out('#lm-tv', String(T));
+});
+K.fig('lm-spec', p => {
+  const T = K.val('#lm-t'), scaled = K.chk('#lm-scale'), w0 = TAU / T;
+  const top = scaled ? 1.25 : 1.25 / T;
+  p.view(-4 * PI, 4 * PI, -.32 * top, top).frame({piTick: true, grid: PI / 2, yT: 3, xl: 'ω'});
+  const env = [];
+  for (let i = 0; i <= 700; i++){ const w = -4 * PI + 8 * PI * i / 700; env.push([w, (scaled ? 1 : 1 / T) * sinc(w / 2)]); }
+  p.curve(env, K.C.prod, 1.6, {dash:[5, 4]});
+  const nmax = Math.ceil(4 * PI / w0);
+  for (let n = -nmax; n <= nmax; n++){
+    const w = n * w0, v = (scaled ? 1 : 1 / T) * sinc(w / 2);
+    p.stem(w, v, K.C.mark, {r: 2.8});
+  }
+  K.html('#lm-ylab', scaled ? 'T·a<sub>n</sub>' : 'a<sub>n</sub>');
+  K.html('#lm-eq', `ω₀ = 2π/T = ${fmt(w0, 3)} rad/s · a<sub>n</sub> = (1/T) sinc(nω₀/2) · a₀ = ${fmt(1 / T, 3)}`);
+  K.out('#lm-val', 'ระยะห่างเส้น ' + fmt(w0, 3));
+});
+K.bind('#lm-t'); K.bind('#lm-scale');
+
+/* ===== 06 CTFT pairs ===== */
+const SIGS = {
+  rect: {plab:'ความกว้าง τ', min:.5, max:4, def:1,
+    x:(t, p) => Math.abs(t) <= p / 2 ? 1 : 0, X:(w, p) => [p * sinc(w * p / 2), 0],
+    tex:p => `X(jω) = τ sinc(ωτ/2) = ${fmt(p, 2)} sinc(${fmt(p / 2, 2)}ω)`,
+    note:'ศูนย์แรกที่ ω = 2π/τ — พัลส์ยิ่งแคบ ศูนย์ยิ่งไกล สเปกตรัมยิ่งกว้าง เฟสกระโดด π ทุกครั้งที่ sinc เปลี่ยนเครื่องหมาย'},
+  exp: {plab:'อัตราลด a', min:.25, max:4, def:1,
+    x:(t, p) => t >= 0 ? Math.exp(-p * t) : 0, X:(w, p) => [p / (p * p + w * w), -w / (p * p + w * w)],
+    tex:p => `X(jω) = 1/(a + jω) = 1/(${fmt(p, 2)} + jω)`,
+    note:'|X| = 1/√(a² + ω²) สูงสุด 1/a ที่ ω = 0 และลดเหลือ 1/(√2·a) ที่ ω = a · เฟสวิ่งจาก +π/2 ไป −π/2'},
+  dexp: {plab:'อัตราลด a', min:.25, max:4, def:1,
+    x:(t, p) => Math.exp(-p * Math.abs(t)), X:(w, p) => [2 * p / (p * p + w * w), 0],
+    tex:p => `X(jω) = 2a/(a² + ω²) = ${fmt(2 * p, 2)}/(${fmt(p * p, 2)} + ω²)`,
+    note:'สัญญาณจริงและคู่ (even) → สเปกตรัมเป็นจำนวนจริงล้วนและคู่ เฟสเป็นศูนย์ทุกความถี่'},
+  tri: {plab:'ครึ่งความกว้าง a', min:.5, max:4, def:1,
+    x:(t, p) => Math.abs(t) < p ? 1 - Math.abs(t) / p : 0, X:(w, p) => [p * Math.pow(sinc(w * p / 2), 2), 0],
+    tex:p => `X(jω) = a sinc²(ωa/2) = ${fmt(p, 2)} sinc²(${fmt(p / 2, 2)}ω)`,
+    note:'สามเหลี่ยม = rect ∗ rect → สเปกตรัมเป็น sinc² (ไม่ติดลบ) และลดเร็วกว่า rect'},
+  delta: {plab:'(ไม่มีพารามิเตอร์)', min:1, max:1, def:1,
+    x:() => 0, X:() => [1, 0],
+    tex:() => 'X(jω) = 1 — ทุกความถี่เท่ากันหมด',
+    note:'อิมพัลส์เดียวในเวลา = พลังงานกระจายทุกความถี่เท่ากัน (เหตุผลที่ h(t) คือ “ลายนิ้วมือ” ของระบบ)'},
+  cos: {plab:'ความถี่ ω₀', min:.5, max:6, def:3,
+    x:(t, p) => Math.cos(p * t), X:() => [0, 0],
+    tex:p => `X(jω) = π[δ(ω − ω₀) + δ(ω + ω₀)], ω₀ = ${fmt(p, 2)}`,
+    note:'สัญญาณคาบให้สเปกตรัมเป็นอิมพัลส์ (เส้น) ไม่ใช่เส้นโค้งต่อเนื่อง — ความสูงของลูกศรคือน้ำหนัก 2π|a_k|'}
+};
+function sigNow(){ return SIGS[K.sval('#ft-sig')] || SIGS.rect; }
+K.fig('ft-time', p => {
+  const s = sigNow(), par = K.val('#ft-p');
+  p.view(-6, 6, -1.35, 1.45).frame({tick: 1, grid: .5, yT: 3, xl: 't'});
+  if (K.sval('#ft-sig') === 'delta'){ p.arrow(0, 1, K.C.x, {label:'1'}); }
+  else { const pts = []; for (let i = 0; i <= 900; i++){ const t = -6 + 12 * i / 900; pts.push([t, s.x(t, par)]); } p.curve(pts, K.C.x, 2.4); }
+  K.out('#ft-pv', fx(par)); K.html('#ft-plab', s.plab);
+  K.html('#ft-formula', s.tex(par)); K.html('#ft-note', s.note);
+});
+K.fig('ft-mag', p => {
+  const s = sigNow(), par = K.val('#ft-p'), kind = K.sval('#ft-sig');
+  if (kind === 'cos'){
+    p.view(-8, 8, -.3, 1.45).frame({piTick: false, tick: 2, yT: 3, xl: 'ω'});
+    p.arrow(par, 1, K.C.mark, {label:'π'}); p.arrow(-par, 1, K.C.mark, {label:'π'});
+    return;
+  }
+  let mx = 0; const pts = [];
+  for (let i = 0; i <= 900; i++){ const w = -20 + 40 * i / 900, X = s.X(w, par), m = cabs(X); pts.push([w, m]); mx = Math.max(mx, m); }
+  p.view(-20, 20, -.1 * mx, 1.25 * mx).frame({tick: 5, grid: 2.5, yT: 3, xl: 'ω'});
+  p.curve(pts, K.C.mark, 2.4);
+});
+K.fig('ft-ph', p => {
+  const s = sigNow(), par = K.val('#ft-p'), kind = K.sval('#ft-sig');
+  p.view(-20, 20, -PI * 1.2, PI * 1.2).frame({tick: 5, grid: 2.5, yTick: PI / 2, xl: 'ω'});
+  if (kind === 'cos'){ p.text('เฟส 0 ที่ ±ω₀', (p.L + p.R) / 2, p.T + 16, K.C.muted); return; }
+  const pts = [];
+  for (let i = 0; i <= 900; i++){
+    const w = -20 + 40 * i / 900, X = s.X(w, par);
+    pts.push(cabs(X) < 1e-9 ? null : [w, carg(X)]);
+  }
+  p.curve(pts, K.C.amber, 2.2);
+});
+K.bind('#ft-sig', () => { const s = sigNow(); const inp = K.$('#ft-p'); inp.min = s.min; inp.max = s.max; inp.step = ((s.max - s.min) / 40) || 1; inp.value = s.def; });
+K.bind('#ft-p');
+
+/* ===== 07 properties ===== */
+K.fig('pr-time', p => {
+  const t0 = K.val('#pr-t0'), a = K.val('#pr-a');
+  p.view(-4, 4, -.35, 1.45).frame({tick: 1, grid: .5, yT: 2, xl: 't'});
+  const pts = [];
+  for (let i = 0; i <= 900; i++){ const t = -4 + 8 * i / 900; pts.push([t, Math.abs(a * (t - t0)) <= .5 ? 1 : 0]); }
+  p.curve(pts, K.C.x, 2.4);
+  p.vline(t0, K.C.mark, 't₀');
+  K.out('#pr-t0v', fx(t0)); K.out('#pr-av', fx(a));
+  K.html('#pr-eq', `x(a(t − t₀)) ↔ (1/|a|) X(jω/a) e<sup>−jωt₀</sup> = ${fmt(1 / a, 2)} · sinc(ω/${fmt(2 * a, 2)}) e<sup>−jω(${fmt(t0, 2)})</sup>`);
+});
+K.fig('pr-mag', p => {
+  const a = K.val('#pr-a');
+  const top = 1.25 * Math.max(1, 1 / a);
+  p.view(-25, 25, -.12 * top, top).frame({tick: 10, grid: 5, yT: 3, xl: 'ω'});
+  const base = [], cur = [];
+  for (let i = 0; i <= 900; i++){ const w = -25 + 50 * i / 900; base.push([w, Math.abs(sinc(w / 2))]); cur.push([w, Math.abs(sinc(w / (2 * a)) / a)]); }
+  p.curve(base, K.C.axis, 1.5, {dash:[5, 4]});
+  p.curve(cur, K.C.mark, 2.4);
+});
+K.fig('pr-ph', p => {
+  const t0 = K.val('#pr-t0'), a = K.val('#pr-a');
+  p.view(-25, 25, -PI * 1.2, PI * 1.2).frame({tick: 10, grid: 5, yTick: PI / 2, xl: 'ω'});
+  const pts = [];
+  for (let i = 0; i <= 1400; i++){
+    const w = -25 + 50 * i / 1400, s = sinc(w / (2 * a));
+    let ph = -w * t0 + (s < 0 ? PI : 0);
+    ph = Math.atan2(Math.sin(ph), Math.cos(ph));
+    pts.push([w, ph]);
+  }
+  p.curve(pts.map((q, i) => (i > 0 && Math.abs(q[1] - pts[i-1][1]) > PI ? null : q)), K.C.amber, 2);
+});
+K.bind('#pr-t0'); K.bind('#pr-a');
+
+K.boot();
+})();
+</script>
+</body>
+</html>

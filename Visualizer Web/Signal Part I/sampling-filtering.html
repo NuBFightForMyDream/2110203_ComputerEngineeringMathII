@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- CP203 Sampling & Filtering (Lecture 05) -->
+<title>Sampling &amp; Filtering Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400;1,600&display=swap">
+<style>
+html,body{margin:0}
+[hidden]{display:none!important}
+img{max-width:100%}
+/* ===== shared tokens & layout for CEMII lecture pages ===== */
+:root{
+  --bg:#EEF1F5; --surface:#FFFFFF; --sunk:#F6F8FB; --ink:#18202D; --muted:#5A6577; --line:#D3DAE4;
+  --grid:rgba(52,86,140,.10); --axis:#8792A5;
+  --x:#1C2638; --h:#D0392C; --mark:#2E6BD9; --prod:#7A4ED3; --y:#12865A; --amber:#B8770F; --on-mark:#FFFFFF;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1219; --surface:#151B24; --sunk:#111721; --ink:#E5E9F0; --muted:#98A2B3; --line:#29323F;
+    --grid:rgba(150,180,230,.08); --axis:#5F6979;
+    --x:#DDE4EF; --h:#FF6C5E; --mark:#6FA1FF; --prod:#B596FF; --y:#44CF98; --amber:#E8A93E; --on-mark:#0E1219;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1219; --surface:#151B24; --sunk:#111721; --ink:#E5E9F0; --muted:#98A2B3; --line:#29323F;
+  --grid:rgba(150,180,230,.08); --axis:#5F6979;
+  --x:#DDE4EF; --h:#FF6C5E; --mark:#6FA1FF; --prod:#B596FF; --y:#44CF98; --amber:#E8A93E; --on-mark:#0E1219;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.65 "IBM Plex Sans Thai",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1240px;margin:0 auto;padding-inline:clamp(16px,3vw,36px);padding-block:28px 72px}
+.math{font-family:"STIX Two Text","Cambria Math","Times New Roman",serif;font-style:italic;letter-spacing:.01em}
+.up{font-style:normal}
+code{font:12.5px/1.4 "IBM Plex Mono",ui-monospace,monospace;background:color-mix(in srgb,var(--ink) 7%,transparent);padding:1px 5px;border-radius:4px;white-space:nowrap}
+:focus-visible{outline:2px solid var(--mark);outline-offset:2px}
+
+header.top{padding-bottom:20px;border-bottom:1px solid var(--line)}
+.eyebrow{font:500 12px/1.4 "IBM Plex Mono",ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+h1{font:600 clamp(28px,4.2vw,42px)/1.06 "STIX Two Text","Times New Roman",serif;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h1 .math{font-weight:400;color:var(--muted);font-size:.58em;margin-left:.3em;white-space:nowrap}
+.lede{margin:10px 0 0;color:var(--muted);max-width:66ch}
+
+.layout{display:grid;grid-template-columns:248px minmax(0,1fr);gap:32px;margin-top:24px;align-items:start}
+@media (max-width:920px){.layout{grid-template-columns:minmax(0,1fr);gap:20px}}
+.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);display:flex;flex-direction:column;gap:2px;max-height:calc(100vh - 40px);overflow-y:auto}
+@media (max-width:920px){.toc{position:static;max-height:none;flex-direction:row;flex-wrap:wrap;gap:6px;padding-bottom:4px}}
+.toc .lab{font:500 11.5px/1.4 "IBM Plex Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+@media (max-width:920px){.toc .lab{width:100%;margin-bottom:2px}}
+.toc a{display:flex;gap:9px;align-items:baseline;padding:7px 10px;border-radius:8px;color:var(--muted);text-decoration:none;font-size:14px;line-height:1.35;border:1px solid transparent}
+.toc a b{font:600 11.5px/1.4 "IBM Plex Mono",monospace;color:var(--muted);flex:none}
+.toc a:hover{background:color-mix(in srgb,var(--mark) 7%,transparent);color:var(--ink)}
+.toc a.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.toc a.on b{color:inherit;opacity:.72}
+
+main{display:flex;flex-direction:column;gap:14px;min-width:0}
+section.sec{scroll-margin-top:24px;padding-block:14px 26px;border-top:1px dashed var(--line)}
+section.sec:first-of-type{border-top:0;padding-top:0}
+section.sec > h2{font:600 24px/1.25 "STIX Two Text","Times New Roman",serif;margin:0 0 4px;display:flex;flex-wrap:wrap;align-items:baseline;gap:10px}
+section.sec > h2 .n{font:600 12px/1 "IBM Plex Mono",monospace;color:var(--mark);letter-spacing:.06em}
+section.sec > h2 .th{font-family:"IBM Plex Sans Thai",sans-serif;font-size:15px;font-weight:400;color:var(--muted)}
+.intro{margin:6px 0 16px;color:var(--muted);max-width:74ch}
+.intro b{color:var(--ink);font-weight:600}
+
+/* formula card */
+.fcard{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:14px}
+.fcard .ftitle{font:500 11.5px/1.4 "IBM Plex Mono",monospace;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+.fbig{font-size:clamp(19px,2.6vw,25px);line-height:2.1;overflow-x:auto;padding-bottom:2px}
+.fbig.sm{font-size:clamp(17px,2.2vw,21px)}
+.legend-sym{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px 18px;margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
+.legend-sym div{display:flex;gap:9px;align-items:baseline;font-size:13.5px;color:var(--muted)}
+.legend-sym .s{font-family:"STIX Two Text",serif;font-style:italic;font-size:17px;color:var(--ink);flex:none;min-width:2.4em}
+.note{margin:10px 0 0;font-size:13.5px;color:var(--muted)}
+.note b{color:var(--ink)}
+.warn{border-left:3px solid var(--amber);padding-left:12px;margin:12px 0 0;font-size:13.5px;color:var(--muted)}
+.warn b{color:var(--ink)}
+
+/* derivation stepper */
+.deriv{margin:0;padding:0;list-style:none;counter-reset:d}
+.deriv li{counter-increment:d;display:grid;grid-template-columns:26px minmax(0,1fr);gap:4px 12px;padding:9px 0;border-top:1px solid var(--line);transition:opacity .2s}
+.deriv li:first-child{border-top:0}
+.deriv li::before{content:counter(d);font:600 11px/18px "IBM Plex Mono",monospace;color:var(--muted);background:var(--sunk);border-radius:50%;width:18px;height:18px;text-align:center;margin-top:5px}
+.deriv li.dim{opacity:.22}
+.deriv .ln{font-size:18px;overflow-x:auto}
+.deriv .why{grid-column:2;font-size:13px;color:var(--muted)}
+.dnav{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}
+.dnav .cnt{font:500 12.5px/1 "IBM Plex Mono",monospace;color:var(--muted)}
+
+/* figures + controls */
+.plot{margin:0 0 12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px 6px}
+.plot figcaption{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 14px;align-items:baseline;margin-bottom:2px}
+.pt{font-weight:600;font-size:14px}
+.pt .math{font-weight:400;font-size:15.5px}
+.legend{display:flex;flex-wrap:wrap;gap:2px 12px;font-size:12.5px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:3px;border-radius:2px;background:var(--c)}
+.legend i.dash{background:repeating-linear-gradient(90deg,var(--c) 0 4px,transparent 4px 7px)}
+.legend .math{font-size:14px;color:var(--ink)}
+canvas{display:block;width:100%;height:200px;touch-action:pan-y}
+canvas.drag{cursor:ew-resize}
+.ctrls{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-bottom:12px}
+.ctrl{display:flex;align-items:center;gap:9px;font-size:13.5px;flex:1 1 210px;min-width:0}
+.ctrl > span:first-child{color:var(--muted);white-space:nowrap}
+.ctrl input[type=range]{flex:1;min-width:80px;accent-color:var(--mark)}
+.ctrl output{font:600 13px/1 "IBM Plex Mono",monospace;color:var(--mark);min-width:3.4em;text-align:right;font-variant-numeric:tabular-nums}
+.ctrl select,.ctrl input[type=text]{font:13.5px "IBM Plex Mono",monospace;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 8px;max-width:100%}
+.ctrl select{font-family:"IBM Plex Sans Thai",sans-serif;cursor:pointer;flex:1}
+.btn{appearance:none;font:500 13.5px/1 "IBM Plex Sans Thai",system-ui,sans-serif;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 12px;min-height:34px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--mark)}
+.btn.primary{background:var(--mark);border-color:var(--mark);color:var(--on-mark)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.sm{min-height:30px;padding:6px 10px;font-size:13px}
+.chk{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;color:var(--muted);cursor:pointer}
+.chk input{accent-color:var(--mark)}
+
+/* readout */
+.out{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 20px;padding:12px 4px;border-block:1px dashed var(--line);margin-bottom:12px;min-height:74px}
+.out .l{display:flex;flex-direction:column;gap:3px;min-width:0;font-size:17px;flex:1 1 320px}
+.out .l .sub{font-size:13px;color:var(--muted)}
+.out .r{font:600 24px/1 "IBM Plex Mono",monospace;color:var(--y);white-space:nowrap}
+.out .r.small{font-size:18px}
+
+/* math bits */
+.bigop{display:inline-flex;align-items:center;vertical-align:middle;margin:0 .1em 0 .12em}
+.bigop .op{font-style:normal;font-size:1.4em;line-height:1}
+.bigop .lims{display:inline-flex;flex-direction:column;justify-content:space-between;font-size:.55em;line-height:1.2;margin-left:.12em;min-height:2.2em}
+.frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;font-size:.86em;line-height:1.25;margin:0 .14em}
+.frac>span:last-child{border-top:1px solid currentColor;padding-top:1px}
+.cases{display:inline-flex;align-items:center;vertical-align:middle}
+.cases .brace{font-size:2.6em;line-height:1;font-style:normal;margin-right:.08em}
+.cases .rows{display:grid;grid-template-columns:auto auto;gap:3px 16px;align-items:center;font-size:.92em}
+.cases .cond{color:var(--muted);white-space:nowrap}
+.box{display:inline-block;border:1.5px solid var(--y);border-radius:8px;padding:2px 10px;background:color-mix(in srgb,var(--y) 8%,transparent)}
+.hl{background:color-mix(in srgb,var(--mark) 16%,transparent);border-radius:4px;padding:0 3px}
+.hl2{background:color-mix(in srgb,var(--prod) 16%,transparent);border-radius:4px;padding:0 3px}
+
+/* tables */
+.tscroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface);margin-bottom:12px}
+table{border-collapse:collapse;font:13.5px/1.35 "IBM Plex Sans Thai",sans-serif;width:max-content;min-width:100%}
+th,td{padding:9px 12px;text-align:left;vertical-align:top;border-top:1px solid var(--line)}
+thead th{border-top:0;color:var(--muted);font-weight:500;font-size:12.5px;letter-spacing:.04em;text-transform:uppercase}
+td.m,th.m{font-family:"STIX Two Text",serif;font-style:italic;font-size:15.5px}
+td.num{font-family:"IBM Plex Mono",monospace;font-style:normal;text-align:right;font-variant-numeric:tabular-nums}
+tbody tr.on{background:color-mix(in srgb,var(--mark) 10%,transparent)}
+.mini{font-size:12.5px;color:var(--muted)}
+footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 18px;justify-content:space-between}
+footer a{color:var(--mark)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+
+.wrapc{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.verdict{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:15px;padding:6px 12px;border-radius:999px}
+.verdict.ok{color:var(--y);background:color-mix(in srgb,var(--y) 13%,transparent)}
+.verdict.bad{color:var(--h);background:color-mix(in srgb,var(--h) 13%,transparent)}
+.calc{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center}
+.calc input[type=number]{width:110px;font:14px "IBM Plex Mono",monospace;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <p class="eyebrow">CP203 · Lecture 05 · Applications: sampling &amp; filtering</p>
+    <h1>Sampling &amp; Filtering <span class="math">Y = X · H</span></h1>
+    <p class="lede">สองเรื่องที่เอา Fourier ไปใช้จริง — สุ่มสัญญาณยังไงไม่ให้เพี้ยน (sampling / aliasing) และกรองความถี่ที่ไม่ต้องการออกยังไง (filtering) ทุกกราฟปรับค่าได้และคำนวณสดจากสูตรในสไลด์</p>
+  </header>
+
+  <div class="layout">
+    <nav class="toc" aria-label="หัวข้อ">
+      <span class="lab">หัวข้อ</span>
+      <a href="#samp"><b>01</b><span>Sampling theorem</span></a>
+      <a href="#alias"><b>02</b><span>Aliasing · ความถี่ที่เห็นผิด</span></a>
+      <a href="#nyq"><b>03</b><span>คิด Nyquist rate</span></a>
+      <a href="#filt"><b>04</b><span>ตัวกรองในอุดมคติ</span></a>
+      <a href="#ma"><b>05</b><span>Moving average &amp; differencing</span></a>
+      <a href="#rc"><b>06</b><span>วงจร RC เป็นตัวกรอง</span></a>
+    </nav>
+
+    <main>
+      <!-- ============ 01 ============ -->
+      <section class="sec" id="samp">
+        <h2><span class="n">01</span> Sampling theorem <span class="th">— สุ่มถี่พอ แล้วกู้สัญญาณเดิมกลับได้เป๊ะ</span></h2>
+        <p class="intro">การสุ่ม = คูณสัญญาณด้วยขบวนอิมพัลส์ <span class="math">p(t)</span> คูณในเวลา = convolution ในความถี่ ผลคือสเปกตรัมเดิม<b>ถูกคัดลอกไปวางซ้ำ</b> ทุก ๆ <span class="math">ω<sub>s</sub></span> ถ้าสำเนาชนกันเมื่อไหร่ = ข้อมูลพัง (aliasing) กู้คืนไม่ได้</p>
+        <div class="fcard">
+          <p class="ftitle">แบบจำลองการสุ่มด้วยขบวนอิมพัลส์</p>
+          <div class="fbig sm math">x<sub>s</sub>(t) = x(t) p(t), <span style="display:inline-block;width:.6em"></span> p(t) = <span class="bigop"><span class="op">Σ</span><span class="lims"><span>∞</span><span>n=−∞</span></span></span> δ(t − nT) <span style="display:inline-block;width:1.6em"></span> ⟹ <span style="display:inline-block;width:1.6em"></span> X<sub>s</sub>(jω) = <span class="frac"><span>1</span><span>T</span></span> <span class="bigop"><span class="op">Σ</span><span class="lims"><span>∞</span><span>k=−∞</span></span></span> X(j(ω − kω<sub>s</sub>))</div>
+          <div class="legend-sym">
+            <div><span class="s">ω<sub>s</sub></span><span>ความถี่สุ่ม <span class="math">= 2π/T</span></span></div>
+            <div><span class="s">ω<sub>B</sub></span><span>แบนด์วิดท์: <span class="math">X(jω) = 0</span> เมื่อ <span class="math">|ω| &gt; ω<sub>B</sub></span></span></div>
+            <div><span class="s">2ω<sub>B</sub></span><span>Nyquist rate — อัตราสุ่มต่ำสุดที่ยังกู้คืนได้</span></div>
+            <div><span class="s">T</span><span>คาบการสุ่ม (sample spacing)</span></div>
+          </div>
+          <p class="note">เงื่อนไข: <span class="math">ω<sub>s</sub> ≥ 2ω<sub>B</sub></span> แล้วเอา lowpass ตัดที่ <span class="math">ω<sub>s</sub>/2</span> ก็ได้ <span class="math">x(t)</span> เดิมกลับมาทั้งหมด</p>
+        </div>
+        <div class="ctrls">
+          <label class="ctrl"><span>แบนด์วิดท์ <span class="math">ω<sub>B</sub></span></span><input type="range" id="sp-b" min="0.5" max="3" step="0.05" value="1.5"><output id="sp-bv">1.50</output></label>
+          <label class="ctrl"><span>ความถี่สุ่ม <span class="math">ω<sub>s</sub></span></span><input type="range" id="sp-s" min="1.5" max="12" step="0.1" value="6"><output id="sp-sv">6.0</output></label>
+        </div>
+        <figure class="plot"><figcaption><span class="pt">สเปกตรัมหลังสุ่ม — สำเนาทุก <span class="math">ω<sub>s</sub></span></span><span class="legend"><span><i style="--c:var(--mark)"></i>ผลรวมที่วัดได้จริง</span><span><i class="dash" style="--c:var(--axis)"></i>สำเนาแต่ละใบ</span><span><i style="--c:var(--h)"></i>บริเวณที่ทับกัน</span></span></figcaption><canvas id="sp-spec" data-h="240"></canvas></figure>
+        <figure class="plot"><figcaption><span class="pt">โดเมนเวลา — <span class="math">x(t) = cos(ω<sub>B</sub>t)</span> กับจุดที่สุ่มได้</span></figcaption><canvas id="sp-time" data-h="190"></canvas></figure>
+        <div class="out"><div class="l"><div class="math" id="sp-eq"></div><div class="sub" id="sp-sub"></div></div><div class="r" id="sp-verdict"></div></div>
+      </section>
+
+      <!-- ============ 02 ============ -->
+      <section class="sec" id="alias">
+        <h2><span class="n">02</span> Aliasing <span class="th">— สุ่มช้าไป แล้วเห็นความถี่ผิดตัว</span></h2>
+        <p class="intro">ถ้าสุ่มไม่ทัน จุดที่ได้จะตรงกับคลื่นความถี่ต่ำกว่าอีกเส้นพอดี ตาเรา (และคอมพิวเตอร์) จะเห็นเป็นเส้นเตี้ยนั้นแทน — นี่คือเหตุผลที่ล้อรถในหนังดูหมุนถอยหลัง ลองตั้ง <span class="math">f = 13</span> Hz, <span class="math">f<sub>s</sub> = 10</span> Hz ตามเดโมในสไลด์แล้วดูว่าได้ 3 Hz</p>
+        <div class="fcard">
+          <p class="ftitle">ความถี่ที่รับรู้ (perceived frequency)</p>
+          <div class="fbig math">f<sub>p</sub> = |f − k f<sub>s</sub>| <span style="display:inline-block;width:1.4em"></span> โดย <span class="math">k</span> = ปัดเศษของ <span class="frac"><span>f</span><span>f<sub>s</sub></span></span></div>
+        </div>
+        <div class="ctrls">
+          <label class="ctrl"><span>ความถี่จริง <span class="math">f</span> (Hz)</span><input type="range" id="al-f" min="0.5" max="20" step="0.5" value="13"><output id="al-fv">13.0</output></label>
+          <label class="ctrl"><span>ความถี่สุ่ม <span class="math">f<sub>s</sub></span> (Hz)</span><input type="range" id="al-fs" min="2" max="40" step="1" value="10"><output id="al-fsv">10</output></label>
+        </div>
+        <figure class="plot"><figcaption><span class="pt">คลื่นจริง จุดที่สุ่ม และคลื่นที่ตาเห็น</span><span class="legend"><span><i style="--c:var(--mark)"></i>คลื่นจริง <span class="math">f</span></span><span><i style="--c:var(--x)"></i>จุดที่สุ่มได้</span><span><i class="dash" style="--c:var(--y)"></i>คลื่นที่รับรู้ <span class="math">f<sub>p</sub></span></span></span></figcaption><canvas id="al-time" data-h="250"></canvas></figure>
+        <div class="out"><div class="l"><div class="math" id="al-eq"></div><div class="sub" id="al-sub"></div></div><div class="r" id="al-val"></div></div>
+      </section>
+
+      <!-- ============ 03 ============ -->
+      <section class="sec" id="nyq">
+        <h2><span class="n">03</span> คิด Nyquist rate <span class="th">— แบบที่ออกสอบ</span></h2>
+        <p class="intro">โจทย์ในสไลด์: เสียงพูดมีสเปกตรัมเกือบเป็นศูนย์เหนือ 5 kHz ต้องสุ่มเท่าไหร่? ใส่ตัวเลขแล้วดูคำตอบทั้งในหน่วย rad/s และระยะห่างจุดสุ่ม</p>
+        <div class="ctrls calc">
+          <label class="ctrl" style="flex:0 1 auto"><span>ความถี่สูงสุดในสัญญาณ</span><input type="number" id="ny-f" value="5" min="0.001" step="0.5"> <span>kHz</span></label>
+        </div>
+        <div class="fcard">
+          <div class="fbig sm math" id="ny-work"></div>
+          <p class="note">เทียบของจริง: เสียงคุยโทรศัพท์ตัดที่ 3.4 kHz จึงสุ่ม 8 kHz · เพลง CD เก็บถึง 20 kHz จึงสุ่ม 44.1 kHz (เผื่อ transition band ของฟิลเตอร์ด้วย)</p>
+        </div>
+      </section>
+
+      <!-- ============ 04 ============ -->
+      <section class="sec" id="filt">
+        <h2><span class="n">04</span> ตัวกรองในอุดมคติ <span class="th">— กรอง = คูณในโดเมนความถี่</span></h2>
+        <p class="intro">สัญญาณทดสอบมีไซน์ความถี่ต่ำ + ไซน์ความถี่สูง + สัญญาณรบกวน ลองเลือกชนิดตัวกรองแล้วดูว่าอะไรรอด อะไรถูกตัด ทั้งในกราฟสเปกตรัมและในเวลา</p>
+        <div class="fcard">
+          <p class="ftitle">หลักการเดียวที่ใช้</p>
+          <div class="fbig math">y[n] = x[n] ∗ h[n] <span style="display:inline-block;width:1.2em"></span> ⟺ <span style="display:inline-block;width:1.2em"></span> <span class="box">Y(e<sup>jω</sup>) = X(e<sup>jω</sup>) · H(e<sup>jω</sup>)</span></div>
+          <p class="note">ตัวกรองอุดมคติ: <span class="math">|H| = 1</span> ในแถบผ่าน (passband) และ <span class="math">|H| = 0</span> ในแถบหยุด (stopband) · ของจริงทำแบบนั้นไม่ได้ ต้องมีแถบเปลี่ยนผ่าน (transition band) และริ้วคลื่น <span class="math">δ₁, δ₂</span> เสมอ</p>
+        </div>
+        <div class="ctrls">
+          <label class="ctrl"><span>ชนิด</span><select id="fl-type">
+            <option value="lp">Low-pass — ผ่านความถี่ต่ำ</option>
+            <option value="hp">High-pass — ผ่านความถี่สูง</option>
+            <option value="bp">Band-pass — ผ่านเฉพาะช่วงกลาง</option>
+            <option value="bs">Band-stop — ตัดเฉพาะช่วงกลาง</option>
+          </select></label>
+          <label class="ctrl"><span>ตัดที่ <span class="math">ω<sub>c1</sub></span></span><input type="range" id="fl-c1" min="0.05" max="0.9" step="0.01" value="0.3"><output id="fl-c1v">0.30π</output></label>
+          <label class="ctrl"><span><span class="math">ω<sub>c2</sub></span> (สำหรับ BP/BS)</span><input type="range" id="fl-c2" min="0.1" max="0.98" step="0.01" value="0.7"><output id="fl-c2v">0.70π</output></label>
+          <label class="ctrl"><span>สัญญาณรบกวน</span><input type="range" id="fl-nz" min="0" max="1" step="0.05" value="0.35"><output id="fl-nzv">0.35</output></label>
+        </div>
+        <figure class="plot"><figcaption><span class="pt">สเปกตรัม <span class="math">|X(e<sup>jω</sup>)|</span> และแถบที่ตัวกรองยอมให้ผ่าน</span><span class="legend"><span><i style="--c:var(--prod)"></i>อินพุต</span><span><i style="--c:var(--mark)"></i>เอาต์พุต</span><span><i style="--c:var(--y)"></i><span class="math">|H|</span></span></span></figcaption><canvas id="fl-spec" data-h="240"></canvas></figure>
+        <figure class="plot"><figcaption><span class="pt">โดเมนเวลา — ก่อน/หลังกรอง</span><span class="legend"><span><i style="--c:var(--axis)"></i><span class="math">x[n]</span></span><span><i style="--c:var(--y)"></i><span class="math">y[n]</span></span></span></figcaption><canvas id="fl-time" data-h="230"></canvas></figure>
+        <div class="out"><div class="l"><div class="math" id="fl-eq"></div><div class="sub" id="fl-sub"></div></div><div class="r small" id="fl-val"></div></div>
+      </section>
+
+      <!-- ============ 05 ============ -->
+      <section class="sec" id="ma">
+        <h2><span class="n">05</span> Moving average &amp; differencing <span class="th">— ตัวกรองที่เขียนได้ในบรรทัดเดียว</span></h2>
+        <p class="intro">ตัวกรองที่ใช้จริงบ่อยที่สุดสองตัว: เฉลี่ยย้อนหลัง <span class="math">L</span> จุด (lowpass — ใช้ทำเส้นค่าเฉลี่ยราคาหุ้นในสไลด์) และผลต่างของจุดติดกัน (highpass — ใช้เน้นขอบภาพ)</p>
+        <div class="fcard">
+          <p class="ftitle">คู่ที่ต้องจำ</p>
+          <div class="fbig sm math">y[n] = <span class="frac"><span>1</span><span>L</span></span> <span class="bigop"><span class="op">Σ</span><span class="lims"><span>L−1</span><span>k=0</span></span></span> x[n−k] <span style="display:inline-block;width:.8em"></span>→<span style="display:inline-block;width:.8em"></span> H(e<sup>jω</sup>) = <span class="frac"><span>1</span><span>L</span></span> · <span class="frac"><span>sin(ωL/2)</span><span>sin(ω/2)</span></span> e<sup>−jω(L−1)/2</sup></div>
+          <div class="fbig sm math">y[n] = <span class="frac"><span>x[n] − x[n−1]</span><span>2</span></span> <span style="display:inline-block;width:.8em"></span>→<span style="display:inline-block;width:.8em"></span> H(e<sup>jω</sup>) = <span class="frac"><span>1</span><span>2</span></span>(1 − e<sup>−jω</sup>) = j e<sup>−jω/2</sup> sin(ω/2)</div>
+          <p class="note">อ่านจากสูตร: ตัวเฉลี่ยมี <span class="math">|H| = 1</span> ที่ <span class="math">ω = 0</span> และเป็นศูนย์ที่ <span class="math">ω = 2πm/L</span> · ตัวผลต่างเป็นศูนย์ที่ <span class="math">ω = 0</span> (ตัด DC ทิ้ง) และสูงสุดที่ <span class="math">ω = π</span></p>
+        </div>
+        <div class="ctrls">
+          <label class="ctrl"><span>ความยาวหน้าต่าง <span class="math">L</span></span><input type="range" id="ma-l" min="2" max="65" step="1" value="9"><output id="ma-lv">9</output></label>
+          <label class="chk"><input type="checkbox" id="ma-diff"> ดูตัวกรองผลต่าง (highpass) แทน</label>
+        </div>
+        <figure class="plot"><figcaption><span class="pt">ผลตอบสนองความถี่ <span class="math">|H(e<sup>jω</sup>)|</span></span><span class="legend"><span><i style="--c:var(--y)"></i>ตัวที่เลือก</span><span><i class="dash" style="--c:var(--axis)"></i>เฉลี่ย 2 จุด <span class="math">|cos(ω/2)|</span></span></span></figcaption><canvas id="ma-h" data-h="210"></canvas></figure>
+        <figure class="plot"><figcaption><span class="pt">ใช้กับข้อมูลจริง (เส้นราคาแบบสุ่มเดิน)</span><span class="legend"><span><i style="--c:var(--axis)"></i>ข้อมูลดิบ</span><span><i style="--c:var(--y)"></i>หลังกรอง</span></span></figcaption><canvas id="ma-sig" data-h="230"></canvas></figure>
+        <div class="out"><div class="l"><div class="math" id="ma-eq"></div><div class="sub" id="ma-sub"></div></div><div class="r small" id="ma-val"></div></div>
+      </section>
+
+      <!-- ============ 06 ============ -->
+      <section class="sec" id="rc">
+        <h2><span class="n">06</span> วงจร RC <span class="th">— ตัวกรองจริงตัวแรกที่ทุกคนเจอ</span></h2>
+        <p class="intro">สมการวงจร <span class="math">RC dv<sub>c</sub>/dt + v<sub>c</sub> = v<sub>s</sub></span> แปลงเป็นโดเมนความถี่ได้ <span class="math">H(jω) = 1/(1 + jωRC)</span> — ดูทั้งสามหน้าพร้อมกัน: ผลตอบสนองอิมพัลส์ ขนาด และเฟส</p>
+        <div class="fcard">
+          <p class="ftitle">สามหน้าของระบบเดียวกัน (สไลด์ 199)</p>
+          <div class="fbig sm math">RC <span class="frac"><span>dh(t)</span><span>dt</span></span> + h(t) = δ(t) <span style="display:inline-block;width:1em"></span>⟺<span style="display:inline-block;width:1em"></span> H(jω) = <span class="frac"><span>1</span><span>1 + jωRC</span></span> <span style="display:inline-block;width:1em"></span>⟺<span style="display:inline-block;width:1em"></span> h(t) = <span class="frac"><span>1</span><span>RC</span></span> e<sup>−t/RC</sup> u(t)</div>
+          <p class="note">ความถี่ตัด (cutoff) อยู่ที่ <span class="math">ω = 1/RC</span> ตรงนั้น <span class="math">|H| = 1/√2 ≈ 0.707</span> (−3 dB) และเฟส <span class="math">= −π/4</span> · ถ้าเอาแรงดันคร่อม R แทน จะกลายเป็น highpass ทันที</p>
+        </div>
+        <div class="ctrls">
+          <label class="ctrl"><span><span class="math">RC</span></span><input type="range" id="rc-v" min="0.1" max="3" step="0.05" value="1"><output id="rc-vv">1.00</output></label>
+          <label class="chk"><input type="checkbox" id="rc-hp"> ดูแบบ highpass (แรงดันคร่อม R)</label>
+        </div>
+        <div class="wrapc">
+          <figure class="plot"><figcaption><span class="pt"><span class="math">|H(jω)|</span></span></figcaption><canvas id="rc-mag" data-h="190"></canvas></figure>
+          <figure class="plot"><figcaption><span class="pt"><span class="math">∠H(jω)</span></span></figcaption><canvas id="rc-ph" data-h="190"></canvas></figure>
+        </div>
+        <figure class="plot"><figcaption><span class="pt">ผลตอบสนองอิมพัลส์ <span class="math">h(t)</span></span></figcaption><canvas id="rc-h" data-h="180"></canvas></figure>
+        <div class="out"><div class="l"><div class="math" id="rc-eq"></div><div class="sub">ยิ่ง <span class="math">RC</span> มาก ตัวกรองยิ่งแคบ (ผ่านแต่ความถี่ต่ำมาก ๆ) และ <span class="math">h(t)</span> ยิ่งยาว — แคบในความถี่ = ยาวในเวลา เหมือนเดิมทุกครั้ง</div></div><div class="r small" id="rc-val"></div></div>
+      </section>
+
+      <footer>
+        <span>อ้างอิง: CP203 Lecture 05 (สไลด์ 174–215) · Oppenheim &amp; Willsky บทที่ 7 · Soliman &amp; Srinath บทที่ 4, 10</span>
+        <span>ทุกกราฟคำนวณสดจากสูตรในหน้านี้</span>
+      </footer>
+    </main>
+  </div>
+</div>
+
+<script>
+/* ===== shared kit: plots, steppers, controls (CEMII lecture pages) ===== */
+const K = (function(){
+'use strict';
+const MINUS = '−', TAU = Math.PI * 2;
+const C = {};
+const TOKENS = ['ink','muted','line','grid','axis','x','h','mark','prod','y','amber','surface','sunk'];
+function readColors(){ const cs = getComputedStyle(document.documentElement); TOKENS.forEach(k => { C[k] = cs.getPropertyValue('--'+k).trim() || '#888'; }); }
+readColors();
+
+/* ---------- numbers ---------- */
+function fmt(v, d){
+  if (d == null) d = 3;
+  if (!isFinite(v)) return (v < 0 ? MINUS : '') + '∞';
+  if (Math.abs(v) < 1e-10) v = 0;
+  const a = Math.abs(v), s = Number.isInteger(a) ? String(a) : String(+a.toFixed(d));
+  return (v < 0 && +s !== 0 ? MINUS : '') + s;
+}
+const fx = (v, d) => (v < 0 && Math.abs(v) >= Math.pow(10, -(d || 2)) / 2 ? MINUS : '') + Math.abs(v).toFixed(d == null ? 2 : d);
+function piLabel(v){
+  const k = v / Math.PI;
+  if (Math.abs(k) < 1e-9) return '0';
+  const q = Math.round(k * 4);
+  if (Math.abs(q - k * 4) > 1e-6) return fmt(v, 2);
+  const sg = q < 0 ? MINUS : '';
+  let num = Math.abs(q), den = 4;
+  const g = (a, b) => b ? g(b, a % b) : a;
+  const d = g(num, den); num /= d; den /= d;
+  return sg + (num === 1 ? 'π' : num + 'π') + (den === 1 ? '' : '/' + den);
+}
+function nice(range, target){
+  const raw = range / Math.max(1, target), p = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / p;
+  return (f < 1.5 ? 1 : f < 3 ? 2 : f < 7 ? 5 : 10) * p;
+}
+function rng(lo, hi, pad){
+  pad = pad == null ? .18 : pad;
+  const s = (hi - lo) || 1;
+  return [lo - (lo < 0 ? pad : pad * .5) * s, hi + pad * s];
+}
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+function simpson(f, a, b, n){
+  n = n % 2 ? n + 1 : n;
+  const hh = (b - a) / n; let s = f(a) + f(b);
+  for (let i = 1; i < n; i++) s += (i % 2 ? 4 : 2) * f(a + i * hh);
+  return s * hh / 3;
+}
+/* complex as [re, im] */
+const cadd = (a, b) => [a[0] + b[0], a[1] + b[1]];
+const cmul = (a, b) => [a[0]*b[0] - a[1]*b[1], a[0]*b[1] + a[1]*b[0]];
+const cabs = a => Math.hypot(a[0], a[1]);
+const carg = a => Math.atan2(a[1], a[0]);
+const cexp = th => [Math.cos(th), Math.sin(th)];
+function cstr(a, d){
+  d = d == null ? 3 : d;
+  const re = Math.abs(a[0]) < 5e-4 ? 0 : a[0], im = Math.abs(a[1]) < 5e-4 ? 0 : a[1];
+  if (im === 0) return fmt(re, d);
+  if (re === 0) return (im < 0 ? MINUS : '') + (Math.abs(im) === 1 ? '' : fmt(Math.abs(im), d)) + 'j';
+  return fmt(re, d) + (im < 0 ? ' ' + MINUS + ' ' : ' + ') + (Math.abs(im) === 1 ? '' : fmt(Math.abs(im), d)) + 'j';
+}
+/* DFT of complex array (arrays of [re,im]) — direct, N is small here */
+function dft(x){
+  const N = x.length, X = [];
+  for (let k = 0; k < N; k++){
+    let re = 0, im = 0;
+    for (let n = 0; n < N; n++){
+      const th = -TAU * k * n / N, c = Math.cos(th), s = Math.sin(th);
+      re += x[n][0] * c - x[n][1] * s; im += x[n][0] * s + x[n][1] * c;
+    }
+    X.push([re, im]);
+  }
+  return X;
+}
+
+/* ---------- plot ---------- */
+class Plot {
+  constructor(cv){ this.cv = cv; this.ctx = cv.getContext('2d'); this.h0 = +cv.dataset.h || 200; this.pad = {l:46, r:16, t:20, b:26}; }
+  size(){
+    const w = this.cv.clientWidth; if (!w) return false;
+    const H = Math.round(this.h0 * (w < 520 ? .84 : 1));
+    const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    const W = Math.round(w * dpr), HH = Math.round(H * dpr);
+    if (this.cv.width !== W || this.cv.height !== HH){ this.cv.width = W; this.cv.height = HH; }
+    this.cv.style.height = H + 'px';
+    this.w = w; this.H = H;
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0); this.ctx.clearRect(0, 0, w, H);
+    return true;
+  }
+  view(x0, x1, y0, y1){ this.x0 = x0; this.x1 = x1; this.y0 = y0; this.y1 = y1; return this; }
+  get L(){ return this.pad.l; } get R(){ return this.w - this.pad.r; }
+  get T(){ return this.pad.t; } get B(){ return this.H - this.pad.b; }
+  pw(){ return this.R - this.L; }
+  X(v){ return this.L + (v - this.x0) / (this.x1 - this.x0) * this.pw(); }
+  Y(v){ return this.T + (this.y1 - v) / (this.y1 - this.y0) * (this.B - this.T); }
+  inv(px){ return this.x0 + (px - this.L) / this.pw() * (this.x1 - this.x0); }
+  frame(o){
+    o = o || {}; const c = this.ctx; c.save();
+    const pi = !!o.piTick;
+    const tick = o.tick || (pi ? Math.PI / 2 : nice(this.x1 - this.x0, Math.max(4, this.pw() / 64)));
+    const grid = o.grid || tick / 2;
+    const ys = o.yTick || nice(this.y1 - this.y0, o.yT || 4);
+    c.lineWidth = 1; c.strokeStyle = C.grid; c.beginPath();
+    for (let i = Math.ceil(this.x0 / grid - 1e-9); i * grid <= this.x1 + 1e-9; i++){ const px = Math.round(this.X(i * grid)) + .5; c.moveTo(px, this.T); c.lineTo(px, this.B); }
+    for (let i = Math.ceil(this.y0 / ys - 1e-9); i * ys <= this.y1 + 1e-9; i++){ const py = Math.round(this.Y(i * ys)) + .5; c.moveTo(this.L, py); c.lineTo(this.R, py); }
+    c.stroke();
+    c.strokeStyle = C.axis; c.beginPath();
+    const p0 = Math.round(this.Y(0)) + .5; c.moveTo(this.L, p0); c.lineTo(this.R, p0);
+    if (this.x0 < 0 && this.x1 > 0){ const q = Math.round(this.X(0)) + .5; c.moveTo(q, this.T); c.lineTo(q, this.B); }
+    c.stroke();
+    c.fillStyle = C.muted; c.font = '11px "IBM Plex Mono", ui-monospace, monospace';
+    c.textAlign = 'center'; c.textBaseline = 'top';
+    for (let i = Math.ceil(this.x0 / tick - 1e-9); i * tick <= this.x1 + 1e-9; i++){
+      const v = i * tick; if (o.skip0 && Math.abs(v) < 1e-9) continue;
+      c.fillText(pi ? piLabel(v) : fmt(v, 2), this.X(v), this.B + 8);
+    }
+    if (!o.noY){
+      c.textAlign = 'right'; c.textBaseline = 'middle';
+      for (let i = Math.ceil(this.y0 / ys - 1e-9); i * ys <= this.y1 + 1e-9; i++) c.fillText(fmt(i * ys, 2), this.L - 8, this.Y(i * ys));
+    }
+    if (o.xl){ c.font = 'italic 14px "STIX Two Text", serif'; c.fillStyle = C.ink; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(o.xl, this.R + 3, this.Y(0)); }
+    c.restore(); return this;
+  }
+  clip(){ const c = this.ctx; c.save(); c.beginPath(); c.rect(this.L, this.T - 8, this.pw(), this.B - this.T + 16); c.clip(); }
+  unclip(){ this.ctx.restore(); }
+  curve(pts, col, w, o){
+    o = o || {}; if (!pts.length) return this; const c = this.ctx; this.clip();
+    c.globalAlpha = o.alpha == null ? 1 : o.alpha; c.strokeStyle = col; c.lineWidth = w || 2; c.lineJoin = 'round'; c.lineCap = 'round';
+    if (o.dash) c.setLineDash(o.dash);
+    const yc = v => clamp(this.Y(v), -5000, 5000);
+    c.beginPath(); let down = false;
+    pts.forEach(p => { if (p == null || !isFinite(p[1])){ down = false; return; } const X = this.X(p[0]), Y = yc(p[1]); if (down) c.lineTo(X, Y); else { c.moveTo(X, Y); down = true; } });
+    c.stroke(); this.unclip(); return this;
+  }
+  area(pts, col, al){
+    if (!pts.length) return this; const c = this.ctx; this.clip();
+    const yc = v => clamp(this.Y(v), -5000, 5000);
+    c.globalAlpha = al == null ? .25 : al; c.fillStyle = col; c.beginPath(); c.moveTo(this.X(pts[0][0]), this.Y(0));
+    pts.forEach(p => c.lineTo(this.X(p[0]), yc(p[1]))); c.lineTo(this.X(pts[pts.length-1][0]), this.Y(0)); c.closePath(); c.fill();
+    this.unclip(); return this;
+  }
+  stem(k, v, col, o){
+    o = o || {}; const c = this.ctx; const px = this.X(k) + (o.dx || 0), p0 = this.Y(0), p1 = clamp(this.Y(v), this.T - 6, this.B + 6);
+    if (px < this.L - 6 || px > this.R + 6) return this;
+    c.save(); c.globalAlpha = o.alpha == null ? 1 : o.alpha; c.strokeStyle = col; c.fillStyle = col; c.lineWidth = o.w || 2;
+    if (Math.abs(v) > 1e-12){ c.beginPath(); c.moveTo(px, p0); c.lineTo(px, p1); c.stroke(); }
+    c.beginPath(); c.arc(px, p1, o.r == null ? 3.4 : o.r, 0, TAU); c.fill();
+    if (o.ring){ c.strokeStyle = o.ring; c.lineWidth = 2; c.beginPath(); c.arc(px, p1, (o.r == null ? 3.4 : o.r) + 3.5, 0, TAU); c.stroke(); }
+    if (o.label != null){ c.font = '600 10.5px "IBM Plex Mono", monospace'; c.textAlign = 'center'; c.textBaseline = v >= 0 ? 'bottom' : 'top'; c.fillText(o.label, px, v >= 0 ? p1 - 6 : p1 + 6); }
+    c.restore(); return this;
+  }
+  arrow(x, v, col, o){ /* impulse arrow */
+    o = o || {}; const c = this.ctx, px = this.X(x), p0 = this.Y(0), p1 = this.Y(v);
+    if (px < this.L - 4 || px > this.R + 4) return this;
+    c.save(); c.strokeStyle = col; c.fillStyle = col; c.lineWidth = o.w || 2;
+    c.beginPath(); c.moveTo(px, p0); c.lineTo(px, p1); c.stroke();
+    const d = v >= 0 ? 1 : -1;
+    c.beginPath(); c.moveTo(px, p1); c.lineTo(px - 4.5, p1 + 8 * d); c.lineTo(px + 4.5, p1 + 8 * d); c.closePath(); c.fill();
+    if (o.label){ c.font = '600 10.5px "IBM Plex Mono", monospace'; c.textAlign = 'center'; c.textBaseline = v >= 0 ? 'bottom' : 'top'; c.fillText(o.label, px, v >= 0 ? p1 - 10 : p1 + 10); }
+    c.restore(); return this;
+  }
+  dot(x, y, col, r){ const c = this.ctx; c.save(); c.fillStyle = col; c.beginPath(); c.arc(this.X(x), clamp(this.Y(y), this.T - 4, this.B + 4), r || 3, 0, TAU); c.fill(); c.restore(); return this; }
+  point(x, y, col, ring){ const c = this.ctx; c.save(); c.fillStyle = col; c.beginPath(); c.arc(this.X(x), clamp(this.Y(y), this.T, this.B), 5, 0, TAU); c.fill(); if (ring){ c.strokeStyle = ring; c.lineWidth = 2; c.beginPath(); c.arc(this.X(x), clamp(this.Y(y), this.T, this.B), 9, 0, TAU); c.stroke(); } c.restore(); return this; }
+  vline(x, col, label, o){
+    o = o || {}; const c = this.ctx, px = Math.round(this.X(x)) + .5; if (px < this.L - 1 || px > this.R + 1) return this;
+    c.save(); c.strokeStyle = col; c.lineWidth = o.w || 1.2; if (o.dash !== false) c.setLineDash(o.dash || [4, 4]);
+    c.beginPath(); c.moveTo(px, this.T - 2); c.lineTo(px, this.B); c.stroke(); c.setLineDash([]);
+    if (label){ c.fillStyle = col; c.font = '500 11.5px "IBM Plex Mono", monospace'; c.textBaseline = 'bottom'; const right = px > this.R - 62; c.textAlign = right ? 'right' : 'left'; c.fillText(label, px + (right ? -5 : 5), this.T - 3); }
+    c.restore(); return this;
+  }
+  band(a, b, col, al){ const c = this.ctx; c.save(); c.globalAlpha = al == null ? .1 : al; c.fillStyle = col; const x0 = Math.max(this.L, this.X(a)), x1 = Math.min(this.R, this.X(b)); if (x1 > x0) c.fillRect(x0, this.T, x1 - x0, this.B - this.T); c.restore(); return this; }
+  text(s, x, y, col, o){
+    o = o || {}; const c = this.ctx; c.save(); c.fillStyle = col;
+    c.font = o.font || '500 12px "IBM Plex Sans Thai", sans-serif';
+    c.textAlign = o.align || 'center'; c.textBaseline = o.base || 'middle';
+    c.fillText(s, x, y); c.restore(); return this;
+  }
+  label(s, x, y, col, o){ return this.text(s, this.X(x), this.Y(y), col, o); }
+}
+
+/* ---------- figure registry ---------- */
+const FIGS = [];
+function fig(id, draw){
+  const cv = document.getElementById(id); if (!cv) return null;
+  const p = new Plot(cv); FIGS.push({p, draw, cv}); return p;
+}
+let raf = 0;
+function redraw(){ if (raf) return; raf = requestAnimationFrame(() => { raf = 0; FIGS.forEach(f => { if (f.cv.offsetParent === null && f.cv.clientWidth === 0) return; if (f.p.size()) f.draw(f.p); }); }); }
+const $ = s => document.querySelector(s);
+const $$ = s => Array.prototype.slice.call(document.querySelectorAll(s));
+function val(sel){ const e = $(sel); return e ? +e.value : 0; }
+function sval(sel){ const e = $(sel); return e ? e.value : ''; }
+function chk(sel){ const e = $(sel); return !!(e && e.checked); }
+function bind(sel, fn){
+  $$(sel).forEach(e => e.addEventListener('input', ev => { if (fn) fn(ev); redraw(); }));
+}
+function out(sel, text){ const e = $(sel); if (e) e.textContent = text; }
+function html(sel, s){ const e = $(sel); if (e) e.innerHTML = s; }
+
+/* ---------- derivation steppers ---------- */
+function derivInit(){
+  $$('.deriv').forEach(list => {
+    const items = Array.prototype.slice.call(list.children);
+    const nav = document.createElement('div'); nav.className = 'dnav';
+    nav.innerHTML = '<button class="btn sm" type="button" data-a="prev">‹ ก่อนหน้า</button>'
+      + '<button class="btn sm primary" type="button" data-a="next">ขั้นถัดไป ›</button>'
+      + '<span class="cnt"></span><button class="btn sm" type="button" data-a="all">แสดงทั้งหมด</button>';
+    list.parentNode.insertBefore(nav, list.nextSibling);
+    let i = 1;
+    function render(){
+      items.forEach((li, k) => li.classList.toggle('dim', k >= i));
+      nav.querySelector('.cnt').textContent = `ขั้นที่ ${Math.min(i, items.length)} / ${items.length}`;
+      nav.querySelector('[data-a=prev]').disabled = i <= 1;
+      nav.querySelector('[data-a=next]').disabled = i >= items.length;
+    }
+    nav.addEventListener('click', e => {
+      const a = e.target.closest('[data-a]'); if (!a) return;
+      if (a.dataset.a === 'next') i = Math.min(items.length, i + 1);
+      else if (a.dataset.a === 'prev') i = Math.max(1, i - 1);
+      else i = items.length;
+      render();
+    });
+    render();
+  });
+}
+
+/* ---------- table of contents scrollspy ---------- */
+function tocInit(){
+  const links = $$('.toc a'); if (!links.length) return;
+  const secs = links.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(en => {
+      if (!en.isIntersecting) return;
+      links.forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + en.target.id));
+    });
+  }, {rootMargin: '-10% 0px -70% 0px', threshold: 0});
+  secs.forEach(s => io.observe(s));
+}
+
+/* ---------- animation loop helper ---------- */
+function ticker(step){
+  let on = false, last = 0, id = 0;
+  function frame(now){
+    if (!on) return;
+    const dt = Math.min(.05, (now - last) / 1000); last = now;
+    step(dt); redraw(); id = requestAnimationFrame(frame);
+  }
+  return {
+    start(){ if (on) return; on = true; last = performance.now(); id = requestAnimationFrame(frame); },
+    stop(){ on = false; if (id) cancelAnimationFrame(id); id = 0; },
+    toggle(){ on ? this.stop() : this.start(); return on; },
+    get running(){ return on; }
+  };
+}
+
+/* ---------- boot ---------- */
+function boot(){
+  derivInit(); tocInit(); redraw();
+  const onTheme = () => { readColors(); redraw(); };
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', onTheme);
+  new MutationObserver(onTheme).observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
+  if (window.ResizeObserver) new ResizeObserver(() => redraw()).observe(document.body);
+  else window.addEventListener('resize', redraw);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(redraw);
+}
+
+return {C, MINUS, TAU, fmt, fx, piLabel, nice, rng, clamp, simpson, cadd, cmul, cabs, carg, cexp, cstr, dft,
+        Plot, fig, redraw, $, $$, val, sval, chk, bind, out, html, ticker, boot, readColors};
+})();
+
+(function(){
+'use strict';
+const {fmt, fx, cabs, carg, MINUS, TAU} = K;
+const PI = Math.PI;
+const tri = (w, B) => Math.abs(w) < B ? 1 - Math.abs(w) / B : 0;
+
+/* ===== 01 sampling ===== */
+K.fig('sp-spec', p => {
+  const B = K.val('#sp-b'), ws = K.val('#sp-s');
+  const W = Math.max(ws * 2.2, B * 3);
+  p.view(-W, W, -.18, 1.35).frame({tick: K.nice(2 * W, 8), yT: 3, xl: 'ω'});
+  const sum = [];
+  for (let i = 0; i <= 1200; i++){
+    const w = -W + 2 * W * i / 1200; let s = 0;
+    for (let k = -6; k <= 6; k++) s += tri(w - k * ws, B);
+    sum.push([w, s]);
+  }
+  for (let k = -6; k <= 6; k++){
+    const c = [];
+    for (let i = 0; i <= 400; i++){ const w = -W + 2 * W * i / 400; c.push([w, tri(w - k * ws, B)]); }
+    p.curve(c, K.C.axis, 1.2, {dash:[4, 3], alpha:.75});
+  }
+  const bad = ws < 2 * B;
+  p.curve(sum, bad ? K.C.h : K.C.mark, 2.6);
+  if (bad){ p.band(ws - B, B, K.C.h, .14); p.band(-B, -ws + B, K.C.h, .14); }
+  p.vline(ws / 2, K.C.y, 'ω_s/2'); p.vline(-ws / 2, K.C.y, null);
+  K.out('#sp-bv', fx(B)); K.out('#sp-sv', fx(ws, 1));
+  K.html('#sp-eq', `ω<sub>s</sub> = ${fmt(ws, 2)} เทียบกับ 2ω<sub>B</sub> = ${fmt(2 * B, 2)} · T = 2π/ω<sub>s</sub> = ${fmt(TAU / ws, 3)}`);
+  K.html('#sp-sub', bad ? 'สำเนาชนกัน (แถบแดง) — ความถี่สูงพับกลับมาทับความถี่ต่ำ กู้คืนไม่ได้แล้ว' : 'สำเนาไม่ชนกัน — เอา lowpass ตัดที่ ω<sub>s</sub>/2 แล้วได้สัญญาณเดิมกลับมาครบ');
+  const v = K.$('#sp-verdict');
+  if (v){ v.className = 'r'; v.innerHTML = `<span class="verdict ${bad ? 'bad' : 'ok'}">${bad ? 'Aliasing' : 'กู้คืนได้'}</span>`; }
+});
+K.fig('sp-time', p => {
+  const B = K.val('#sp-b'), ws = K.val('#sp-s'), T = TAU / ws;
+  p.view(0, 16, -1.35, 1.45).frame({tick: 2, grid: 1, yT: 2, xl: 't'});
+  const c = [];
+  for (let i = 0; i <= 900; i++){ const t = 16 * i / 900; c.push([t, Math.cos(B * t)]); }
+  p.curve(c, K.C.mark, 2);
+  for (let n = 0; n * T <= 16; n++) p.stem(n * T, Math.cos(B * n * T), K.C.x, {r: 3, w: 1.6});
+});
+K.bind('#sp-b'); K.bind('#sp-s');
+
+/* ===== 02 aliasing ===== */
+K.fig('al-time', p => {
+  const f = K.val('#al-f'), fs = K.val('#al-fs');
+  const k = Math.round(f / fs), fp = Math.abs(f - k * fs);
+  p.view(0, 1, -1.4, 1.5).frame({tick: .1, grid: .05, yT: 2, xl: 't (s)'});
+  const c1 = [], c2 = [];
+  for (let i = 0; i <= 1400; i++){ const t = i / 1400; c1.push([t, Math.cos(TAU * f * t)]); c2.push([t, Math.cos(TAU * fp * t)]); }
+  p.curve(c1, K.C.mark, 1.6, {alpha:.85});
+  if (fp < f - 1e-9) p.curve(c2, K.C.y, 2.4, {dash:[6, 4]});
+  for (let n = 0; n / fs <= 1; n++) p.stem(n / fs, Math.cos(TAU * f * n / fs), K.C.x, {r: 3.4, w: 1.6});
+  K.out('#al-fv', fx(f, 1)); K.out('#al-fsv', String(fs));
+  K.html('#al-eq', `k = ปัดเศษ(f/f<sub>s</sub>) = ปัดเศษ(${fmt(f / fs, 2)}) = ${k} → f<sub>p</sub> = |${fmt(f, 1)} − ${k}·${fmt(fs, 0)}| = ${fmt(fp, 2)} Hz`);
+  K.html('#al-sub', fs >= 2 * f ? 'สุ่มเกิน Nyquist (f<sub>s</sub> ≥ 2f) → เห็นความถี่ถูกต้อง' : 'สุ่มต่ำกว่า Nyquist → จุดที่ได้ไปตรงกับคลื่นเตี้ยกว่า (เส้นประเขียว) นั่นคือความถี่ที่เราจะเห็น');
+  const v = K.$('#al-val');
+  if (v) v.innerHTML = `<span class="verdict ${fs >= 2 * f ? 'ok' : 'bad'}">f<sub>p</sub> = ${fmt(fp, 2)} Hz</span>`;
+});
+K.bind('#al-f'); K.bind('#al-fs');
+
+/* ===== 03 Nyquist calculator ===== */
+function nyq(){
+  const f = Math.max(.001, +K.sval('#ny-f') || 5);
+  const fs = 2 * f, ws = TAU * fs * 1000, T = 1 / (fs * 1000);
+  K.html('#ny-work',
+    `f<sub>max</sub> = ${fmt(f, 3)} kHz → ω<sub>B</sub> = 2π(${fmt(f, 3)}k) = ${fmt(TAU * f, 2)}k rad/s<br>` +
+    `f<sub>s</sub> ≥ 2f<sub>max</sub> = <span class="hl">${fmt(fs, 3)} kHz</span> <span style="display:inline-block;width:1.2em"></span> ω<sub>s</sub> = 2·2π·${fmt(f, 3)}k = <span class="hl">${fmt(ws, 0)} rad/s</span><br>` +
+    `T = 1/f<sub>s</sub> = <span class="hl">${fmt(T * 1000, 4)} ms</span> ต่อหนึ่งตัวอย่าง`);
+}
+K.bind('#ny-f', nyq); nyq();
+
+/* ===== 04 ideal filtering ===== */
+const NF = 256;
+function noiseArr(){
+  if (noiseArr.v) return noiseArr.v;
+  let s = 12345; const a = [];
+  for (let i = 0; i < NF; i++){ s = (s * 1664525 + 1013904223) % 4294967296; a.push(s / 4294967296 - .5); }
+  return (noiseArr.v = a);
+}
+function idft(X){
+  const N = X.length, x = [];
+  for (let n = 0; n < N; n++){
+    let re = 0, im = 0;
+    for (let k = 0; k < N; k++){ const th = TAU * k * n / N, c = Math.cos(th), s = Math.sin(th); re += X[k][0] * c - X[k][1] * s; im += X[k][0] * s + X[k][1] * c; }
+    x.push([re / N, im / N]);
+  }
+  return x;
+}
+const W1 = .12 * PI, W2 = .62 * PI;
+let flCache = {key:'', d:null};
+function flData(){
+  const nz = K.val('#fl-nz'), type = K.sval('#fl-type'), c1 = K.val('#fl-c1') * PI, c2 = K.val('#fl-c2') * PI;
+  const key = [nz, type, c1, c2].join('|');
+  if (flCache.key === key) return flCache.d;
+  const nA = noiseArr(), x = [];
+  for (let n = 0; n < NF; n++) x.push([Math.cos(W1 * n) + .7 * Math.cos(W2 * n) + nz * 3 * nA[n], 0]);
+  const X = K.dft(x);
+  const Hk = k => {
+    let w = TAU * k / NF; if (w > PI) w -= TAU;
+    const aw = Math.abs(w);
+    if (type === 'lp') return aw <= c1 ? 1 : 0;
+    if (type === 'hp') return aw >= c1 ? 1 : 0;
+    if (type === 'bp') return aw >= Math.min(c1, c2) && aw <= Math.max(c1, c2) ? 1 : 0;
+    return (aw >= Math.min(c1, c2) && aw <= Math.max(c1, c2)) ? 0 : 1;
+  };
+  const Y = X.map((z, k) => { const h = Hk(k); return [z[0] * h, z[1] * h]; });
+  const y = idft(Y).map(z => z[0]);
+  const d = {x: x.map(z => z[0]), X, Y, y, Hk, type, c1, c2};
+  flCache = {key, d}; return d;
+}
+K.fig('fl-spec', p => {
+  const d = flData();
+  let mx = 0;
+  for (let k = 0; k <= NF / 2; k++) mx = Math.max(mx, cabs(d.X[k]));
+  p.view(0, PI, -.12 * mx, 1.3 * mx).frame({piTick: true, tick: PI / 4, grid: PI / 8, yT: 3, xl: 'ω'});
+  const ptsX = [], ptsY = [], ptsH = [];
+  for (let k = 0; k <= NF / 2; k++){
+    const w = TAU * k / NF;
+    ptsX.push([w, cabs(d.X[k])]); ptsY.push([w, cabs(d.Y[k])]); ptsH.push([w, d.Hk(k) * mx]);
+  }
+  p.area(ptsH, K.C.y, .10); p.curve(ptsH, K.C.y, 1.6);
+  p.curve(ptsX, K.C.prod, 1.6, {alpha:.75});
+  p.curve(ptsY, K.C.mark, 2.4);
+  p.vline(W1, K.C.axis, 'ω₁', {dash:[2, 3]}); p.vline(W2, K.C.axis, 'ω₂', {dash:[2, 3]});
+  K.out('#fl-c1v', fx(K.val('#fl-c1')) + 'π'); K.out('#fl-c2v', fx(K.val('#fl-c2')) + 'π'); K.out('#fl-nzv', fx(K.val('#fl-nz')));
+  const names = {lp:'Low-pass', hp:'High-pass', bp:'Band-pass', bs:'Band-stop'};
+  const keep1 = d.Hk(Math.round(W1 * NF / TAU)) > .5, keep2 = d.Hk(Math.round(W2 * NF / TAU)) > .5;
+  K.html('#fl-eq', `${names[d.type]} · ω₁ = 0.12π ${keep1 ? 'ผ่าน' : 'ถูกตัด'} · ω₂ = 0.62π ${keep2 ? 'ผ่าน' : 'ถูกตัด'}`);
+  K.html('#fl-sub', 'พื้นที่เขียว = แถบผ่านของตัวกรอง · เส้นม่วงคืออินพุต เส้นน้ำเงินคือเอาต์พุต — ทุกอย่างที่อยู่นอกแถบเขียวถูกคูณด้วยศูนย์');
+  let e = 0; for (let n = 0; n < NF; n++) e += d.y[n] * d.y[n];
+  K.out('#fl-val', 'พลังงานเหลือ ' + fmt(100 * e / d.x.reduce((s, v) => s + v * v, 0), 1) + '%');
+});
+K.fig('fl-time', p => {
+  const d = flData();
+  const mx = Math.max(...d.x.map(Math.abs), ...d.y.map(Math.abs));
+  p.view(0, 128, -1.25 * mx, 1.25 * mx).frame({tick: 16, grid: 8, yT: 3, xl: 'n'});
+  const px = [], py = [];
+  for (let n = 0; n <= 128; n++){ px.push([n, d.x[n]]); py.push([n, d.y[n]]); }
+  p.curve(px, K.C.axis, 1.4, {alpha:.85});
+  p.curve(py, K.C.y, 2.4);
+});
+['#fl-type', '#fl-c1', '#fl-c2', '#fl-nz'].forEach(s => K.bind(s));
+
+/* ===== 05 moving average / differencing ===== */
+function walk(){
+  if (walk.v) return walk.v;
+  let s = 987654321, v = 0; const a = [];
+  for (let i = 0; i < 260; i++){ s = (s * 1103515245 + 12345) % 2147483648; v += (s / 2147483648 - .48) * 1.4; a.push(v + 8 * Math.sin(i / 42)); }
+  return (walk.v = a);
+}
+function maH(w, L){ const d = Math.sin(w / 2); return Math.abs(d) < 1e-9 ? 1 : Math.abs(Math.sin(w * L / 2) / (L * d)); }
+K.fig('ma-h', p => {
+  const L = K.val('#ma-l'), diff = K.chk('#ma-diff');
+  p.view(-PI, PI, -.12, 1.28).frame({piTick: true, grid: PI / 4, yT: 3, xl: 'ω'});
+  const two = [], main = [];
+  for (let i = 0; i <= 1000; i++){
+    const w = -PI + TAU * i / 1000;
+    two.push([w, Math.abs(Math.cos(w / 2))]);
+    main.push([w, diff ? Math.abs(Math.sin(w / 2)) : maH(w, L)]);
+  }
+  p.curve(two, K.C.axis, 1.4, {dash:[5, 4]});
+  p.curve(main, K.C.y, 2.6);
+  K.out('#ma-lv', String(L));
+  K.html('#ma-eq', diff
+    ? 'ตัวกรองผลต่าง: |H(e<sup>jω</sup>)| = |sin(ω/2)| — ศูนย์ที่ ω = 0, สูงสุดที่ ω = π'
+    : `เฉลี่ย ${L} จุด: ศูนย์ตัวแรกที่ ω = 2π/L = ${fmt(TAU / L, 3)} → ยิ่ง L มาก ยิ่งตัดความถี่ต่ำลงมา (เรียบขึ้น แต่ตามข้อมูลช้าลง)`);
+  K.html('#ma-sub', diff ? 'ใช้เน้นการเปลี่ยนแปลงเร็ว ๆ เช่น ขอบในภาพ — ค่าคงที่ (DC) หายไปหมด' : 'ใช้ลดสัญญาณรบกวน/ทำเส้นค่าเฉลี่ย — แต่หน่วงเวลา (L−1)/2 จุดเสมอ');
+  K.out('#ma-val', diff ? 'highpass' : 'ตัดที่ ' + fmt(TAU / L, 2));
+});
+K.fig('ma-sig', p => {
+  const L = K.val('#ma-l'), diff = K.chk('#ma-diff'), a = walk();
+  const y = a.map((v, n) => {
+    if (diff) return n === 0 ? 0 : (a[n] - a[n - 1]) / 2;
+    let s = 0, c = 0;
+    for (let k = 0; k < L; k++){ if (n - k < 0) break; s += a[n - k]; c++; }
+    return s / c;
+  });
+  const lo = Math.min(...a, ...y), hi = Math.max(...a, ...y);
+  const r = K.rng(lo, hi, .12);
+  p.view(0, a.length - 1, r[0], r[1]).frame({tick: 50, grid: 25, yT: 3, xl: 'n'});
+  p.curve(a.map((v, n) => [n, v]), K.C.axis, 1.4, {alpha:.85});
+  p.curve(y.map((v, n) => [n, v]), K.C.y, 2.4);
+});
+K.bind('#ma-l'); K.bind('#ma-diff');
+
+/* ===== 06 RC ===== */
+function rcH(w, rc, hp){
+  const d = 1 + Math.pow(w * rc, 2);
+  return hp ? [w * w * rc * rc / d, w * rc / d] : [1 / d, -w * rc / d];
+}
+K.fig('rc-mag', p => {
+  const rc = K.val('#rc-v'), hp = K.chk('#rc-hp');
+  p.view(-8, 8, -.12, 1.28).frame({tick: 2, grid: 1, yT: 3, xl: 'ω'});
+  const pts = [];
+  for (let i = 0; i <= 900; i++){ const w = -8 + 16 * i / 900; pts.push([w, cabs(rcH(w, rc, hp))]); }
+  p.curve(pts, K.C.mark, 2.6);
+  p.vline(1 / rc, K.C.y, '1/RC'); p.vline(-1 / rc, K.C.y, null);
+  p.curve([[-8, Math.SQRT1_2], [8, Math.SQRT1_2]], K.C.axis, 1.2, {dash:[4, 4]});
+  K.out('#rc-vv', fx(rc));
+  K.html('#rc-eq', hp
+    ? `H(jω) = jωRC/(1 + jωRC) · ความถี่ตัด 1/RC = ${fmt(1 / rc, 3)} rad/s`
+    : `H(jω) = 1/(1 + jωRC) · ความถี่ตัด 1/RC = ${fmt(1 / rc, 3)} rad/s · |H| ที่นั่น = ${fmt(Math.SQRT1_2, 3)}`);
+  K.out('#rc-val', (hp ? 'highpass' : 'lowpass'));
+});
+K.fig('rc-ph', p => {
+  const rc = K.val('#rc-v'), hp = K.chk('#rc-hp');
+  p.view(-8, 8, -PI * .75, PI * .75).frame({tick: 2, grid: 1, yTick: PI / 4, xl: 'ω'});
+  const pts = [];
+  for (let i = 0; i <= 900; i++){ const w = -8 + 16 * i / 900; pts.push([w, carg(rcH(w, rc, hp))]); }
+  p.curve(pts, K.C.amber, 2.4);
+  p.vline(1 / rc, K.C.y, null); p.vline(-1 / rc, K.C.y, null);
+});
+K.fig('rc-h', p => {
+  const rc = K.val('#rc-v'), hp = K.chk('#rc-hp');
+  p.view(-1, 8, -.25 / rc, 1.25 / rc).frame({tick: 1, grid: .5, yT: 3, xl: 't'});
+  if (hp) p.arrow(0, 1 / rc, K.C.x, {label:'δ(t)'});
+  const pts = [];
+  for (let i = 0; i <= 900; i++){ const t = -1 + 9 * i / 900; pts.push([t, t >= 0 ? (hp ? -1 : 1) * Math.exp(-t / rc) / rc : 0]); }
+  p.curve(pts, K.C.x, 2.4);
+});
+K.bind('#rc-v'); K.bind('#rc-hp');
+
+K.boot();
+})();
+</script>
+</body>
+</html>

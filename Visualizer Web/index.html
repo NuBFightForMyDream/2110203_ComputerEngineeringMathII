@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<!-- 2110203 Comp Eng Math II Visualizer Lab hub — lists every visualizer by part and opens each one inside this page -->
-<title>2110203 Comp Eng Math II Visualizer</title>
+<!-- CEMII Lab hub -->
+<title>CEMII Lab</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400;1,600&display=swap">
@@ -90,14 +90,14 @@ h1 .math{font-weight:400;font-size:.52em;color:var(--muted);margin-left:.3em;whi
 </head>
 <body>
 <header class="bar">
-  <a class="brand" href="#" aria-label="2110203 Comp Eng Math II Visualizer หน้ารวม"><b>CEMII Lab</b><span>2110203</span></a>
+  <a class="brand" href="#" aria-label="CEMII Lab หน้ารวม"><b>CEMII Lab</b><span>2110203</span></a>
   <nav id="nav" aria-label="เลือก lecture"></nav>
 </header>
 <main class="stage" id="stage">
   <section class="home" id="home" aria-labelledby="home-title">
     <div class="home-in">
       <p class="eyebrow">2110203 · Computer Engineering Mathematics II</p>
-      <h1 id="home-title">2110203 Comp Eng Math II Visualizer<span class="math">y = x ∗ h, …</span></h1>
+      <h1 id="home-title">CEMII Lab <span class="math">y = x ∗ h, …</span></h1>
       <p class="lede">Visualizer ของแต่ละ lecture รวมไว้ในลิงก์เดียว แบ่งตาม part ของวิชา — เลือกจากแถบด้านบนหรือรายการด้านล่าง แต่ละหน้าเล่นได้ ลากได้ และใส่โจทย์เองได้</p>
       <div id="parts"></div>
       <section class="next">
@@ -116,12 +116,21 @@ h1 .math{font-weight:400;font-size:.52em;color:var(--muted);margin-left:.3em;whi
    file คือพาธของไฟล์ .html เทียบกับโฟลเดอร์ของ part (folder)
    ------------------------------------------------------------------ */
 const PARTS = [
-  { id: 'signal1', name: 'Signal Part I', th: 'สัญญาณและระบบ', folder: 'Signal Part I', lectures: [
+  { id: 'signal1', name: 'Signal Part I', short: 'Signal I', th: 'สัญญาณและระบบ', folder: 'Signal Part I', lectures: [
     { id: 'convolution', no: '02', title: 'Convolution', th: 'คอนโวลูชัน', file: 'convolution-lab.html',
       desc: 'พลิก → เลื่อน → คูณ → รวม ทั้งแบบ discrete และ continuous ด้วยโจทย์ Exercise 2.1–2.6 พร้อมวิธีตาราง การแบ่งช่วงคิดของ ∫ และเขียนสัญญาณเองเป็นสูตร + เงื่อนไขได้',
-      tags: ['<span class="math">y[n] = Σ x[k] h[n − k]</span>', '<span class="math">y(t) = ∫ x(τ) h(t − τ) dτ</span>', 'วิธีตาราง', 'piecewise'] }
+      tags: ['<span class="math">y[n] = Σ x[k] h[n − k]</span>', '<span class="math">y(t) = ∫ x(τ) h(t − τ) dτ</span>', 'วิธีตาราง', 'piecewise'] },
+    { id: 'fourier-ct', no: '03', title: 'Fourier · Continuous', th: 'ฟูเรียร์ เวลาต่อเนื่อง', file: 'fourier-ct.html',
+      desc: 'อ่านสูตรทีละตัวแล้วเห็นภาพ: สร้างคลื่นจากฮาร์มอนิก, ม้วนสัญญาณรอบวงกลมเพื่อหา a\u2096, ยืดคาบจนกลายเป็น Fourier transform, คู่ transform ที่ต้องจำ และสมบัติที่ออกสอบ',
+      tags: ['<span class="math">a<sub>k</sub> = (1/T)∫ x(t)e<sup>−jkω₀t</sup>dt</span>', '<span class="math">X(jω) = ∫ x(t)e<sup>−jωt</sup>dt</span>', 'Gibbs', 'Exercise 3.2'] },
+    { id: 'fourier-dt', no: '04', title: 'Fourier · Discrete', th: 'ฟูเรียร์ เวลาไม่ต่อเนื่อง', file: 'fourier-dt.html',
+      desc: 'แยกให้ชัดว่า DTFS / DTFT / DFT ต่างกันตรงไหน ทำไมทุกอย่างวนซ้ำทุก 2π, DFT คือการสุ่ม DTFT, circular convolution และ FFT เร็วขึ้นเพราะอะไร',
+      tags: ['<span class="math">X(e<sup>jω</sup>) = Σ x[n]e<sup>−jωn</sup></span>', '<span class="math">X[k]</span> = สุ่มที่ <span class="math">2πk/N</span>', 'circular conv.', 'FFT'] },
+    { id: 'apps', no: '05', title: 'Sampling & Filtering', th: 'การสุ่มและการกรอง', file: 'sampling-filtering.html',
+      desc: 'สเปกตรัมซ้อนกันตอนสุ่มช้าเกินไป (aliasing), คิด Nyquist rate, ตัวกรองอุดมคติ 4 ชนิด, moving average / differencing และวงจร RC ที่เป็นตัวกรองตัวแรกของทุกคน',
+      tags: ['<span class="math">ω<sub>s</sub> ≥ 2ω<sub>B</sub></span>', '<span class="math">f<sub>p</sub> = |f − kf<sub>s</sub>|</span>', '<span class="math">Y = X·H</span>', 'RC filter'] }
   ]},
-  { id: 'optim', name: 'Optimization', th: 'การหาค่าเหมาะที่สุด', folder: 'Optimization', lectures: [] }
+  { id: 'optim', name: 'Optimization', short: 'Optim', th: 'การหาค่าเหมาะที่สุด', folder: 'Optimization', lectures: [] }
 ];
 
 const BUNDLE = window.CEM_BUNDLE || {};
@@ -132,7 +141,7 @@ PARTS.forEach(p => p.lectures.forEach(l => all.push(Object.assign({key: p.id + '
 
 /* nav */
 $('#nav').innerHTML = '<a href="#" data-key="">หน้ารวม</a>' +
-  all.map(l => `<a href="#${l.key}" data-key="${l.key}"><span class="pt">${l.part.name}</span>${l.no} ${l.title}</a>`).join('');
+  all.map(l => `<a href="#${l.key}" data-key="${l.key}"><span class="pt">${l.part.short || l.part.name}</span>${l.no} ${l.title}</a>`).join('');
 
 /* home list */
 $('#parts').innerHTML = PARTS.map(p => `
@@ -178,9 +187,9 @@ function route(){
       frames[lec.key] = f;
     }
     f.hidden = false;
-    document.title = `${lec.title} · 2110203 Comp Eng Math II Visualizer`;
+    document.title = `${lec.title} · CEMII Lab`;
   } else {
-    document.title = '2110203 Comp Eng Math II Visualizer';
+    document.title = 'CEMII Lab';
   }
   document.querySelectorAll('#nav a').forEach(a => {
     if (a.dataset.key === (lec ? lec.key : '')) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');

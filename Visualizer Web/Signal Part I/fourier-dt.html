@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- CP203 Fourier Lab — discrete time (Lecture 04) -->
+<title>Fourier Lab · Discrete Time</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400;1,600&display=swap">
+<style>
+html,body{margin:0}
+[hidden]{display:none!important}
+img{max-width:100%}
+/* ===== shared tokens & layout for CEMII lecture pages ===== */
+:root{
+  --bg:#EEF1F5; --surface:#FFFFFF; --sunk:#F6F8FB; --ink:#18202D; --muted:#5A6577; --line:#D3DAE4;
+  --grid:rgba(52,86,140,.10); --axis:#8792A5;
+  --x:#1C2638; --h:#D0392C; --mark:#2E6BD9; --prod:#7A4ED3; --y:#12865A; --amber:#B8770F; --on-mark:#FFFFFF;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1219; --surface:#151B24; --sunk:#111721; --ink:#E5E9F0; --muted:#98A2B3; --line:#29323F;
+    --grid:rgba(150,180,230,.08); --axis:#5F6979;
+    --x:#DDE4EF; --h:#FF6C5E; --mark:#6FA1FF; --prod:#B596FF; --y:#44CF98; --amber:#E8A93E; --on-mark:#0E1219;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1219; --surface:#151B24; --sunk:#111721; --ink:#E5E9F0; --muted:#98A2B3; --line:#29323F;
+  --grid:rgba(150,180,230,.08); --axis:#5F6979;
+  --x:#DDE4EF; --h:#FF6C5E; --mark:#6FA1FF; --prod:#B596FF; --y:#44CF98; --amber:#E8A93E; --on-mark:#0E1219;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.65 "IBM Plex Sans Thai",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1240px;margin:0 auto;padding-inline:clamp(16px,3vw,36px);padding-block:28px 72px}
+.math{font-family:"STIX Two Text","Cambria Math","Times New Roman",serif;font-style:italic;letter-spacing:.01em}
+.up{font-style:normal}
+code{font:12.5px/1.4 "IBM Plex Mono",ui-monospace,monospace;background:color-mix(in srgb,var(--ink) 7%,transparent);padding:1px 5px;border-radius:4px;white-space:nowrap}
+:focus-visible{outline:2px solid var(--mark);outline-offset:2px}
+
+header.top{padding-bottom:20px;border-bottom:1px solid var(--line)}
+.eyebrow{font:500 12px/1.4 "IBM Plex Mono",ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+h1{font:600 clamp(28px,4.2vw,42px)/1.06 "STIX Two Text","Times New Roman",serif;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h1 .math{font-weight:400;color:var(--muted);font-size:.58em;margin-left:.3em;white-space:nowrap}
+.lede{margin:10px 0 0;color:var(--muted);max-width:66ch}
+
+.layout{display:grid;grid-template-columns:248px minmax(0,1fr);gap:32px;margin-top:24px;align-items:start}
+@media (max-width:920px){.layout{grid-template-columns:minmax(0,1fr);gap:20px}}
+.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);display:flex;flex-direction:column;gap:2px;max-height:calc(100vh - 40px);overflow-y:auto}
+@media (max-width:920px){.toc{position:static;max-height:none;flex-direction:row;flex-wrap:wrap;gap:6px;padding-bottom:4px}}
+.toc .lab{font:500 11.5px/1.4 "IBM Plex Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+@media (max-width:920px){.toc .lab{width:100%;margin-bottom:2px}}
+.toc a{display:flex;gap:9px;align-items:baseline;padding:7px 10px;border-radius:8px;color:var(--muted);text-decoration:none;font-size:14px;line-height:1.35;border:1px solid transparent}
+.toc a b{font:600 11.5px/1.4 "IBM Plex Mono",monospace;color:var(--muted);flex:none}
+.toc a:hover{background:color-mix(in srgb,var(--mark) 7%,transparent);color:var(--ink)}
+.toc a.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.toc a.on b{color:inherit;opacity:.72}
+
+main{display:flex;flex-direction:column;gap:14px;min-width:0}
+section.sec{scroll-margin-top:24px;padding-block:14px 26px;border-top:1px dashed var(--line)}
+section.sec:first-of-type{border-top:0;padding-top:0}
+section.sec > h2{font:600 24px/1.25 "STIX Two Text","Times New Roman",serif;margin:0 0 4px;display:flex;flex-wrap:wrap;align-items:baseline;gap:10px}
+section.sec > h2 .n{font:600 12px/1 "IBM Plex Mono",monospace;color:var(--mark);letter-spacing:.06em}
+section.sec > h2 .th{font-family:"IBM Plex Sans Thai",sans-serif;font-size:15px;font-weight:400;color:var(--muted)}
+.intro{margin:6px 0 16px;color:var(--muted);max-width:74ch}
+.intro b{color:var(--ink);font-weight:600}
+
+/* formula card */
+.fcard{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:14px}
+.fcard .ftitle{font:500 11.5px/1.4 "IBM Plex Mono",monospace;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+.fbig{font-size:clamp(19px,2.6vw,25px);line-height:2.1;overflow-x:auto;padding-bottom:2px}
+.fbig.sm{font-size:clamp(17px,2.2vw,21px)}
+.legend-sym{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px 18px;margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
+.legend-sym div{display:flex;gap:9px;align-items:baseline;font-size:13.5px;color:var(--muted)}
+.legend-sym .s{font-family:"STIX Two Text",serif;font-style:italic;font-size:17px;color:var(--ink);flex:none;min-width:2.4em}
+.note{margin:10px 0 0;font-size:13.5px;color:var(--muted)}
+.note b{color:var(--ink)}
+.warn{border-left:3px solid var(--amber);padding-left:12px;margin:12px 0 0;font-size:13.5px;color:var(--muted)}
+.warn b{color:var(--ink)}
+
+/* derivation stepper */
+.deriv{margin:0;padding:0;list-style:none;counter-reset:d}
+.deriv li{counter-increment:d;display:grid;grid-template-columns:26px minmax(0,1fr);gap:4px 12px;padding:9px 0;border-top:1px solid var(--line);transition:opacity .2s}
+.deriv li:first-child{border-top:0}
+.deriv li::before{content:counter(d);font:600 11px/18px "IBM Plex Mono",monospace;color:var(--muted);background:var(--sunk);border-radius:50%;width:18px;height:18px;text-align:center;margin-top:5px}
+.deriv li.dim{opacity:.22}
+.deriv .ln{font-size:18px;overflow-x:auto}
+.deriv .why{grid-column:2;font-size:13px;color:var(--muted)}
+.dnav{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}
+.dnav .cnt{font:500 12.5px/1 "IBM Plex Mono",monospace;color:var(--muted)}
+
+/* figures + controls */
+.plot{margin:0 0 12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px 6px}
+.plot figcaption{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 14px;align-items:baseline;margin-bottom:2px}
+.pt{font-weight:600;font-size:14px}
+.pt .math{font-weight:400;font-size:15.5px}
+.legend{display:flex;flex-wrap:wrap;gap:2px 12px;font-size:12.5px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:3px;border-radius:2px;background:var(--c)}
+.legend i.dash{background:repeating-linear-gradient(90deg,var(--c) 0 4px,transparent 4px 7px)}
+.legend .math{font-size:14px;color:var(--ink)}
+canvas{display:block;width:100%;height:200px;touch-action:pan-y}
+canvas.drag{cursor:ew-resize}
+.ctrls{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-bottom:12px}
+.ctrl{display:flex;align-items:center;gap:9px;font-size:13.5px;flex:1 1 210px;min-width:0}
+.ctrl > span:first-child{color:var(--muted);white-space:nowrap}
+.ctrl input[type=range]{flex:1;min-width:80px;accent-color:var(--mark)}
+.ctrl output{font:600 13px/1 "IBM Plex Mono",monospace;color:var(--mark);min-width:3.4em;text-align:right;font-variant-numeric:tabular-nums}
+.ctrl select,.ctrl input[type=text]{font:13.5px "IBM Plex Mono",monospace;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 8px;max-width:100%}
+.ctrl select{font-family:"IBM Plex Sans Thai",sans-serif;cursor:pointer;flex:1}
+.btn{appearance:none;font:500 13.5px/1 "IBM Plex Sans Thai",system-ui,sans-serif;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 12px;min-height:34px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--mark)}
+.btn.primary{background:var(--mark);border-color:var(--mark);color:var(--on-mark)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.sm{min-height:30px;padding:6px 10px;font-size:13px}
+.chk{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;color:var(--muted);cursor:pointer}
+.chk input{accent-color:var(--mark)}
+
+/* readout */
+.out{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 20px;padding:12px 4px;border-block:1px dashed var(--line);margin-bottom:12px;min-height:74px}
+.out .l{display:flex;flex-direction:column;gap:3px;min-width:0;font-size:17px;flex:1 1 320px}
+.out .l .sub{font-size:13px;color:var(--muted)}
+.out .r{font:600 24px/1 "IBM Plex Mono",monospace;color:var(--y);white-space:nowrap}
+.out .r.small{font-size:18px}
+
+/* math bits */
+.bigop{display:inline-flex;align-items:center;vertical-align:middle;margin:0 .1em 0 .12em}
+.bigop .op{font-style:normal;font-size:1.4em;line-height:1}
+.bigop .lims{display:inline-flex;flex-direction:column;justify-content:space-between;font-size:.55em;line-height:1.2;margin-left:.12em;min-height:2.2em}
+.frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;font-size:.86em;line-height:1.25;margin:0 .14em}
+.frac>span:last-child{border-top:1px solid currentColor;padding-top:1px}
+.cases{display:inline-flex;align-items:center;vertical-align:middle}
+.cases .brace{font-size:2.6em;line-height:1;font-style:normal;margin-right:.08em}
+.cases .rows{display:grid;grid-template-columns:auto auto;gap:3px 16px;align-items:center;font-size:.92em}
+.cases .cond{color:var(--muted);white-space:nowrap}
+.box{display:inline-block;border:1.5px solid var(--y);border-radius:8px;padding:2px 10px;background:color-mix(in srgb,var(--y) 8%,transparent)}
+.hl{background:color-mix(in srgb,var(--mark) 16%,transparent);border-radius:4px;padding:0 3px}
+.hl2{background:color-mix(in srgb,var(--prod) 16%,transparent);border-radius:4px;padding:0 3px}
+
+/* tables */
+.tscroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface);margin-bottom:12px}
+table{border-collapse:collapse;font:13.5px/1.35 "IBM Plex Sans Thai",sans-serif;width:max-content;min-width:100%}
+th,td{padding:9px 12px;text-align:left;vertical-align:top;border-top:1px solid var(--line)}
+thead th{border-top:0;color:var(--muted);font-weight:500;font-size:12.5px;letter-spacing:.04em;text-transform:uppercase}
+td.m,th.m{font-family:"STIX Two Text",serif;font-style:italic;font-size:15.5px}
+td.num{font-family:"IBM Plex Mono",monospace;font-style:normal;text-align:right;font-variant-numeric:tabular-nums}
+tbody tr.on{background:color-mix(in srgb,var(--mark) 10%,transparent)}
+.mini{font-size:12.5px;color:var(--muted)}
+footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 18px;justify-content:space-between}
+footer a{color:var(--mark)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+
+.wrapc{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.quad{display:grid;grid-template-columns:auto 1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:12px}
+.quad > div{background:var(--surface);padding:12px 14px}
+.quad .hd{font:500 12px/1.4 "IBM Plex Mono",monospace;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);background:var(--sunk)}
+.quad .nm{font-weight:600;font-size:15px;margin-bottom:4px}
+.quad .fm{font-family:"STIX Two Text",serif;font-style:italic;font-size:15px;color:var(--ink);line-height:1.8}
+.quad .tag{font-size:12.5px;color:var(--muted);margin-top:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <p class="eyebrow">CP203 · Lecture 04 · Fourier analysis of discrete-time signals</p>
+    <h1>Fourier Lab · DT <span class="math">x[n] ↔ X(e<sup>jω</sup>) ↔ X[k]</span></h1>
+    <p class="lede">ฝั่ง discrete มี 3 สูตรที่หน้าตาคล้ายกันจนสับสน — DTFS, DTFT และ DFT หน้านี้แยกให้เห็นว่าแต่ละตัวใช้เมื่อไหร่ ต่างกันตรงไหน และทำไมทุกอย่างถึงวนซ้ำทุก <span class="math">2π</span></p>
+  </header>
+
+  <div class="layout">
+    <nav class="toc" aria-label="หัวข้อ">
+      <span class="lab">หัวข้อ</span>
+      <a href="#per"><b>01</b><span>ทำไมทุกอย่างวนที่ <span class="math">2π</span></span></a>
+      <a href="#dtfs"><b>02</b><span>DTFS · สัญญาณคาบ</span></a>
+      <a href="#dtft"><b>03</b><span>DTFT · สัญญาณไม่เป็นคาบ</span></a>
+      <a href="#dft"><b>04</b><span>DFT · เอาไปคำนวณจริง</span></a>
+      <a href="#circ"><b>05</b><span>Circular convolution</span></a>
+      <a href="#fft"><b>06</b><span>FFT เร็วขึ้นยังไง</span></a>
+      <a href="#map"><b>07</b><span>แผนที่รวม 4 สูตร</span></a>
+    </nav>
+
+    <main>
+      <!-- ============ 01 ============ -->
+      <section class="sec" id="per">
+        <h2><span class="n">01</span> ความถี่ใน discrete-time วนซ้ำทุก <span class="math">2π</span> <span class="th">— ต่างจาก continuous-time ตรงนี้ที่เดียว</span></h2>
+        <p class="intro">ใน DT เรามีค่าเฉพาะที่ <span class="math">n</span> เป็นจำนวนเต็ม ทำให้ <span class="math">e<sup>j(ω+2π)n</sup> = e<sup>jωn</sup>e<sup>j2πn</sup> = e<sup>jωn</sup></span> — <b>คนละ <span class="math">ω</span> แต่ได้ลำดับเดียวกันเป๊ะ</b> ผลคือสเปกตรัมทุกตัวในฝั่ง DT เป็นคาบ <span class="math">2π</span> และ “ความถี่สูงสุด” ที่มีความหมายคือ <span class="math">ω = π</span> (สลับเครื่องหมายทุกจุด)</p>
+        <div class="fcard">
+          <p class="ftitle">สองข้อที่ต้องติดหัวไว้</p>
+          <div class="fbig sm math">e<sup>j(ω + 2π)n</sup> = e<sup>jωn</sup> <span style="display:inline-block;width:2em"></span> X(e<sup>j(ω+2π)</sup>) = X(e<sup>jω</sup>)</div>
+          <p class="note">ความถี่ต่ำ = <span class="math">ω</span> ใกล้ <span class="math">0, ±2π, ±4π…</span> · ความถี่สูง = <span class="math">ω</span> ใกล้ <span class="math">±π, ±3π…</span> (สไลด์ 134)</p>
+        </div>
+        <div class="ctrls">
+          <label class="ctrl"><span>ความถี่ <span class="math">ω</span></span><input type="range" id="pr-w" min="0" max="6.283" step="0.02" value="0.7"><output id="pr-wv">0.70</output></label>
+          <label class="chk"><input type="checkbox" id="pr-alias" checked> แสดงคลื่นที่ <span class="math">ω + 2π</span> ทับลงไป</label>
+        </div>
+        <figure class="plot">
+          <figcaption><span class="pt">ตัวอย่าง <span class="math">x[n] = cos(ωn)</span></span>
+          <span class="legend"><span><i style="--c:var(--x)"></i>ตัวอย่างจริง</span><span><i class="dash" style="--c:var(--mark)"></i><span class="math">cos(ωt)</span></span><span><i class="dash" style="--c:var(--h)"></i><span class="math">cos((ω+2π)t)</span></span></span></figcaption>
+          <canvas id="pr-time" data-h="230"></canvas>
+        </figure>
+        <div class="out"><div class="l"><div class="math" id="pr-eq"></div><div class="sub" id="pr-sub"></div></div><div class="r small" id="pr-val"></div></div>
+      </section>
+
+      <!-- ============ 02 ============ -->
+      <section class="sec" id="dtfs">
+        <h2><span class="n">02</span> DTFS <span class="th">— สัญญาณคาบ <span class="math">N</span> จุด ใช้ฮาร์มอนิกแค่ <span class="math">N</span> ตัว</span></h2>
+        <p class="intro">ต่างจาก CT ที่ต้องใช้ฮาร์มอนิก<b>อนันต์</b> ฝั่ง DT ฮาร์มอนิกตัวที่ <span class="math">k</span> กับ <span class="math">k + N</span> เป็นตัวเดียวกัน (จากข้อ 01) ผลรวมจึงจบแค่ <span class="math">N</span> พจน์ และ <span class="math">a<sub>k</sub></span> เองก็เป็นคาบ <span class="math">N</span> ด้วย</p>
+        <div class="fcard">
+          <p class="ftitle">คู่สูตร DTFS</p>
+          <div class="fbig math">x[n] = <span class="bigop"><span class="op">Σ</span><span class="lims"><span></span><span>k=&lt;N&gt;</span></span></span> a<sub>k</sub> e<sup>jk(2π/N)n</sup> <span style="display:inline-block;width:2.2em"></span> a<sub>k</sub> = <span class="frac"><span>1</span><span>N</span></span> <span class="bigop"><span class="op">Σ</span><span class="lims"><span></span><span>n=&lt;N&gt;</span></span></span> x[n] e<sup>−jk(2π/N)n</sup></div>
+          <div class="legend-sym">
+            <div><span class="s">N</span><span>คาบของสัญญาณ (จำนวนจุดต่อหนึ่งคาบ)</span></div>
+            <div><span class="s">ω₀</span><span><span class="math">= 2π/N</span> — ระยะห่างระหว่างฮาร์มอนิก</span></div>
+            <div><span class="s">&lt;N&gt;</span><span>บวก <span class="math">N</span> จุดติดกัน ช่วงไหนก็ได้</span></div>
+            <div><span class="s">a<sub>k+N</sub></span><span><span class="math">= a<sub>k</sub></span> เสมอ — สัมประสิทธิ์เป็นคาบ</span></div>
+          </div>
+        </div>
+        <div class="ctrls">
+          <label class="ctrl"><span>คาบ <span class="math">N</span></span><input type="range" id="fs-N" min="5" max="40" step="1" value="10"><output id="fs-Nv">10</output></label>
+          <label class="ctrl"><span>ครึ่งความกว้าง <span class="math">N₁</span></span><input type="range" id="fs-N1" min="0" max="8" step="1" value="2"><output id="fs-N1v">2</output></label>
+        </div>
+        <figure class="plot"><figcaption><span class="pt">สัญญาณคาบ <span class="math">x̃[n]</span> — พัลส์สี่เหลี่ยมซ้ำทุก <span class="math">N</span></span></figcaption><canvas id="fs-x" data-h="180"></canvas></figure>
+        <figure class="plot"><figcaption><span class="pt">สัมประสิทธิ์ <span class="math">a<sub>k</sub></span> (จริงล้วน เพราะสัญญาณสมมาตร)</span><span class="legend"><span><i style="--c:var(--mark)"></i><span class="math">a<sub>k</sub></span></span><span><i class="dash" style="--c:var(--prod)"></i>ซองสัญญาณ Dirichlet</span></span></figcaption><canvas id="fs-a" data-h="220"></canvas></figure>
+        <div class="out"><div class="l"><div class="math" id="fs-eq"></div><div class="sub">สูตรปิดของพัลส์คาบ: <span class="math">a<sub>k</sub> = sin(2πk(N₁+½)/N) / (N sin(πk/N))</span> และ <span class="math">a₀ = (2N₁+1)/N</span></div></div><div class="r small" id="fs-val"></div></div>
+      </section>
+
+      <!-- ============ 03 ============ -->
+      <section class="sec" id="dtft">
+        <h2><span class="n">03</span> DTFT <span class="th">— สัญญาณไม่เป็นคาบ: จาก <span class="math">N → ∞</span></span></h2>
+        <p class="intro">เอาสัญญาณความยาวจำกัดมาทำให้เป็นคาบด้วยคาบ <span class="math">N</span> แล้วปล่อย <span class="math">N → ∞</span> ระยะห่างฮาร์มอนิก <span class="math">ω₀ = 2π/N</span> จะเล็กลงจนเส้นสเปกตรัมกลายเป็น<b>เส้นโค้งต่อเนื่อง</b> — นั่นคือ <span class="math">X(e<sup>jω</sup>)</span> (สไลด์ 125–128)</p>
+        <div class="fcard">
+          <p class="ftitle">คู่สูตร DTFT (4.14 / 4.15)</p>
+          <div class="fbig math">X(e<sup>jω</sup>) = <span class="bigop"><span class="op">Σ</span><span class="lims"><span>∞</span><span>n=−∞</span></span></span> x[n] e<sup>−jωn</sup> <span style="display:inline-block;width:2.2em"></span> x[n] = <span class="frac"><span>1</span><span>2π</span></span> <span class="bigop"><span class="op">∫</span><span class="lims"><span></span><span>2π</span></span></span> X(e<sup>jω</sup>) e<sup>jωn</sup> dω</div>
+          <div class="legend-sym">
+            <div><span class="s">Σ</span><span>ฝั่งวิเคราะห์เป็น<b>ผลรวม</b> (เวลาเป็นจุด ๆ)</span></div>
+            <div><span class="s">∫<sub>2π</sub></span><span>ฝั่งสังเคราะห์เป็น<b>อินทิกรัล</b>ช่วงเดียวยาว <span class="math">2π</span> (ความถี่ต่อเนื่องแต่เป็นคาบ)</span></div>
+            <div><span class="s">ω</span><span>หน่วย rad/sample — ไม่ใช่ rad/s</span></div>
+            <div><span class="s">Σ|x[n]|</span><span>ต้องลู่เข้า สูตรถึงจะใช้ได้ (สไลด์ 129)</span></div>
+          </div>
+        </div>
+        <div class="ctrls">
+          <label class="ctrl"><span>สัญญาณ</span><select id="dt-sig">
+            <option value="apow">a^n u[n] — Exercise 3</option>
+            <option value="rect">พัลส์ |n| ≤ N₁ — Exercise 4</option>
+            <option value="delta">δ[n] — Exercise 5</option>
+            <option value="cos">cos(ω₀n) — สัญญาณคาบ</option>
+          </select></label>
+          <label class="ctrl"><span id="dt-plab">พารามิเตอร์ a</span><input type="range" id="dt-p" min="-0.9" max="0.9" step="0.02" value="0.5"><output id="dt-pv">0.50</output></label>
+        </div>
+        <figure class="plot"><figcaption><span class="pt">โดเมนเวลา <span class="math">x[n]</span></span></figcaption><canvas id="dt-x" data-h="180"></canvas></figure>
+        <div class="wrapc">
+          <figure class="plot"><figcaption><span class="pt"><span class="math">|X(e<sup>jω</sup>)|</span></span><span class="legend"><span><i style="--c:var(--mark)"></i>ขนาด</span><span><i style="--c:var(--line)"></i>ช่วงหลัก <span class="math">[−π, π]</span></span></span></figcaption><canvas id="dt-mag" data-h="200"></canvas></figure>
+          <figure class="plot"><figcaption><span class="pt"><span class="math">∠X(e<sup>jω</sup>)</span></span></figcaption><canvas id="dt-ph" data-h="200"></canvas></figure>
+        </div>
+        <div class="out"><div class="l"><div class="math fbig sm" id="dt-formula"></div><div class="sub" id="dt-note"></div></div></div>
+        <p class="warn"><b>อ่านกราฟให้เป็น:</b> ถ้าขนาดพุ่งสูงตรง <span class="math">ω = 0</span> (และ <span class="math">±2π</span>) แปลว่าสัญญาณนั้น “ช้า/เรียบ” = lowpass · ถ้าพุ่งตรง <span class="math">ω = ±π</span> แปลว่าสลับขึ้นลงทุกจุด = highpass — ลองลาก <span class="math">a</span> ไปทางลบดู</p>
+      </section>
+
+      <!-- ============ 04 ============ -->
+      <section class="sec" id="dft">
+        <h2><span class="n">04</span> DFT <span class="th">— สุ่ม DTFT ให้เหลือ <span class="math">N</span> จุด เพื่อให้คอมพิวเตอร์คำนวณได้</span></h2>
+        <p class="intro">คอมพิวเตอร์เก็บ <span class="math">ω</span> ต่อเนื่องไม่ได้ เลยสุ่ม <span class="math">X(e<sup>jω</sup>)</span> ที่ <span class="math">ω<sub>k</sub> = 2πk/N</span> จำนวน <span class="math">N</span> จุดเท่ากับความยาวสัญญาณ — <b>DFT คือตัวอย่างของ DTFT</b> ไม่ใช่สูตรใหม่ลอย ๆ (สมการ 4.29)</p>
+        <div class="fcard">
+          <p class="ftitle">คู่สูตร DFT (4.19 / 4.20)</p>
+          <div class="fbig math">X[k] = <span class="bigop"><span class="op">Σ</span><span class="lims"><span>N−1</span><span>n=0</span></span></span> x[n] e<sup>−j(2π/N)nk</sup> <span style="display:inline-block;width:2em"></span> x[n] = <span class="frac"><span>1</span><span>N</span></span> <span class="bigop"><span class="op">Σ</span><span class="lims"><span>N−1</span><span>k=0</span></span></span> X[k] e<sup>j(2π/N)nk</sup></div>
+          <div class="legend-sym">
+            <div><span class="s">W<sub>N</sub></span><span><span class="math">= e<sup>−j2π/N</sup></span> — twiddle factor, เขียนเป็นเมทริกซ์ <span class="math">X = Wx</span> ได้</span></div>
+            <div><span class="s">k</span><span>ช่องความถี่ที่ <span class="math">ω<sub>k</sub> = 2πk/N</span></span></div>
+            <div><span class="s">X[k] = N a<sub>k</sub></span><span>ความสัมพันธ์กับ DTFS (4.28)</span></div>
+            <div><span class="s">X[k+N]</span><span><span class="math">= X[k]</span> — เป็นคาบ <span class="math">N</span></span></div>
+          </div>
+        </div>
+        <div class="ctrls">
+          <label class="ctrl"><span><span class="math">x[n]</span> =</span><input type="text" id="df-x" value="1, 2, 0, -1" spellcheck="false"></label>
+          <span class="mini">ใส่ตัวเลขคั่นด้วยจุลภาค (2–16 จุด)</span>
+        </div>
+        <figure class="plot"><figcaption><span class="pt"><span class="math">x[n]</span> — <span class="math">N</span> จุด</span></figcaption><canvas id="df-x-plot" data-h="170"></canvas></figure>
+        <figure class="plot"><figcaption><span class="pt">DFT คือการสุ่ม DTFT</span><span class="legend"><span><i style="--c:var(--prod)"></i><span class="math">|X(e<sup>jω</sup>)|</span> ต่อเนื่อง</span><span><i style="--c:var(--mark)"></i><span class="math">|X[k]|</span> ที่ <span class="math">ω = 2πk/N</span></span></span></figcaption><canvas id="df-mag" data-h="230"></canvas></figure>
+        <div class="tscroll"><table><thead><tr><th class="m">k</th><th class="m">ω<sub>k</sub></th><th class="m">X[k]</th><th class="m">|X[k]|</th><th class="m">∠X[k]</th></tr></thead><tbody id="df-tbody"></tbody></table></div>
+        <p class="note">เช็กกับสไลด์ 160: <span class="math">x[n] = {1, 2, 0, −1}</span> ได้ <span class="math">X[k] = {2, 1−3j, 0, 1+3j}</span> — สังเกต <span class="math">X[3] = X[1]<sup>*</sup></span> เพราะ <span class="math">x[n]</span> เป็นจำนวนจริง</p>
+      </section>
+
+      <!-- ============ 05 ============ -->
+      <section class="sec" id="circ">
+        <h2><span class="n">05</span> คูณในความถี่ = convolution <b>แบบวน</b> <span class="th">— กับดักที่ต้องระวัง</span></h2>
+        <p class="intro">ใน DFT การคูณ <span class="math">Y[k] = X[k]H[k]</span> ให้ผลเป็น <b>circular convolution</b> (ตัวที่เลยขอบจะวนกลับมาต้นแถว) ไม่ใช่ linear convolution แบบใน Lecture 02 — ดูตารางเทียบด้านล่าง</p>
+        <div class="fcard">
+          <p class="ftitle">Exercise 3.3.1 — สองวิธี ผลลัพธ์เดียวกัน</p>
+          <div class="fbig sm math">y[n] = <span class="bigop"><span class="op">Σ</span><span class="lims"><span>N−1</span><span>m=0</span></span></span> h[m] x[(n − m) mod N] <span style="display:inline-block;width:1.4em"></span> ⟺ <span style="display:inline-block;width:1.4em"></span> Y[k] = X[k] · H[k]</div>
+        </div>
+        <div class="ctrls">
+          <label class="ctrl"><span><span class="math">x[n]</span> =</span><input type="text" id="cc-x" value="1, 2, 0, -1" spellcheck="false"></label>
+          <label class="ctrl"><span><span class="math">h[n]</span> =</span><input type="text" id="cc-h" value="1, 3, -1, -2" spellcheck="false"></label>
+        </div>
+        <div class="wrapc">
+          <figure class="plot"><figcaption><span class="pt">circular <span class="math">y[n] = x ⊛ h</span> (ผ่าน DFT)</span></figcaption><canvas id="cc-y" data-h="190"></canvas></figure>
+          <figure class="plot"><figcaption><span class="pt">linear <span class="math">x ∗ h</span> (Lecture 02)</span><span class="legend"><span><i style="--c:var(--prod)"></i>ส่วนที่วนกลับ</span></span></figcaption><canvas id="cc-lin" data-h="190"></canvas></figure>
+        </div>
+        <div class="tscroll"><table><thead><tr><th class="m">n</th><th class="m">linear</th><th class="m">ส่วนที่เลยขอบ (n ≥ N)</th><th class="m">circular</th></tr></thead><tbody id="cc-tbody"></tbody></table></div>
+        <p class="note">ค่าเริ่มต้นตรงกับสไลด์: <span class="math">x = {1,2,0,−1}</span>, <span class="math">h = {1,3,−1,−2}</span> → linear <span class="math">= {1,5,5,−5,−7,1,2}</span> พอพับส่วนที่เกิน (<span class="math">n = 4,5,6</span>) กลับไปบวกที่ <span class="math">n = 0,1,2</span> จะได้ circular <span class="math">= {−6, 6, 7, −5}</span> · ถ้าอยากให้ DFT ให้ผลเท่ากับ linear ต้องเติมศูนย์ (zero-pad) ให้ยาวอย่างน้อย <span class="math">N<sub>x</sub> + N<sub>h</sub> − 1</span></p>
+      </section>
+
+      <!-- ============ 06 ============ -->
+      <section class="sec" id="fft">
+        <h2><span class="n">06</span> FFT <span class="th">— ทำไมถึงเร็วขึ้นมหาศาล</span></h2>
+        <p class="intro">DFT ตรง ๆ ใช้การคูณ <span class="math">N²</span> ครั้ง FFT แบ่งลำดับเป็นคู่/คี่ซ้ำไปเรื่อย ๆ (decimation in time) จนเหลือ DFT ขนาด 2 จุด ทำให้เหลือ <span class="math">N log₂N</span></p>
+        <div class="fcard">
+          <p class="ftitle">แนวคิดแบ่งครึ่ง (4.39–4.40)</p>
+          <div class="fbig sm math">X[k] = <span class="bigop"><span class="op">Σ</span><span class="lims"><span></span><span>n คู่</span></span></span> x[n]W<sub>N</sub><sup>nk</sup> + <span class="bigop"><span class="op">Σ</span><span class="lims"><span></span><span>n คี่</span></span></span> x[n]W<sub>N</sub><sup>nk</sup> = G[k] + W<sub>N</sub><sup>k</sup> H[k] <span style="display:inline-block;width:1.2em"></span> X[k + N/2] = G[k] − W<sub>N</sub><sup>k</sup> H[k]</div>
+          <p class="note">สองบรรทัดนี้คือ “ปีกผีเสื้อ” (butterfly): คำนวณ <span class="math">G[k]</span> กับ <span class="math">H[k]</span> ครั้งเดียว ใช้ได้ทั้งช่อง <span class="math">k</span> และ <span class="math">k + N/2</span></p>
+        </div>
+        <figure class="plot"><figcaption><span class="pt">จำนวนการคูณเชิงซ้อน</span><span class="legend"><span><i style="--c:var(--h)"></i>DFT ตรง ๆ <span class="math">N²</span></span><span><i style="--c:var(--y)"></i>FFT <span class="math">N log₂N</span></span></span></figcaption><canvas id="ff-plot" data-h="220"></canvas></figure>
+        <div class="ctrls"><label class="ctrl"><span>ขนาด <span class="math">N</span></span><input type="range" id="ff-n" min="3" max="14" step="1" value="10"><output id="ff-nv">1024</output></label></div>
+        <div class="out"><div class="l"><div class="math" id="ff-eq"></div><div class="sub">ตัวอย่างจริง: เสียง 1 วินาทีที่ 44,100 Hz ถ้าใช้ DFT ตรง ๆ ≈ 2 พันล้านการคูณ แต่ FFT ≈ 6.8 แสน</div></div><div class="r small" id="ff-val"></div></div>
+      </section>
+
+      <!-- ============ 07 ============ -->
+      <section class="sec" id="map">
+        <h2><span class="n">07</span> แผนที่รวม <span class="th">— สี่สูตร ต่างกันแค่ “เป็นคาบ” กับ “เป็นจุด”</span></h2>
+        <p class="intro">กฎเดียวที่ใช้จำทั้งตาราง: <b>เป็นจุด ๆ (discrete) ในโดเมนหนึ่ง ⇒ เป็นคาบในอีกโดเมนหนึ่ง</b></p>
+        <div class="quad">
+          <div class="hd"></div><div class="hd">สัญญาณเป็นคาบ</div><div class="hd">สัญญาณไม่เป็นคาบ</div>
+          <div class="hd" style="display:flex;align-items:center">Continuous-time</div>
+          <div><div class="nm">Fourier Series</div><div class="fm">a<sub>k</sub> = (1/T)∫<sub>&lt;T&gt;</sub> x(t)e<sup>−jkω₀t</sup> dt</div><div class="tag">ความถี่: เป็นจุด ๆ · ไม่เป็นคาบ</div></div>
+          <div><div class="nm">Fourier Transform</div><div class="fm">X(jω) = ∫<sub>−∞</sub><sup>∞</sup> x(t)e<sup>−jωt</sup> dt</div><div class="tag">ความถี่: ต่อเนื่อง · ไม่เป็นคาบ</div></div>
+          <div class="hd" style="display:flex;align-items:center">Discrete-time</div>
+          <div><div class="nm">DTFS / DFT</div><div class="fm">a<sub>k</sub> = (1/N)Σ<sub>&lt;N&gt;</sub> x[n]e<sup>−jk(2π/N)n</sup></div><div class="tag">ความถี่: เป็นจุด ๆ · เป็นคาบ <span class="math">N</span> → คำนวณจริงได้</div></div>
+          <div><div class="nm">DTFT</div><div class="fm">X(e<sup>jω</sup>) = Σ<sub>n</sub> x[n]e<sup>−jωn</sup></div><div class="tag">ความถี่: ต่อเนื่อง · เป็นคาบ <span class="math">2π</span></div></div>
+        </div>
+        <div class="tscroll"><table>
+          <thead><tr><th>สมบัติ DTFT</th><th class="m">x[n]</th><th class="m">X(e<sup>jω</sup>)</th><th>หมายเหตุ</th></tr></thead>
+          <tbody>
+            <tr><td>Periodicity</td><td class="m">x[n]</td><td class="m">X(e<sup>j(ω+2π)</sup>) = X(e<sup>jω</sup>)</td><td>ข้อที่ CT ไม่มี</td></tr>
+            <tr><td>Time shifting</td><td class="m">x[n − n₀]</td><td class="m">e<sup>−jωn₀</sup>X(e<sup>jω</sup>)</td><td>ขนาดเท่าเดิม เฟสเอียง</td></tr>
+            <tr><td>Freq. shifting</td><td class="m">e<sup>jω₀n</sup>x[n]</td><td class="m">X(e<sup>j(ω−ω₀)</sup>)</td><td>เลื่อน π = สลับ LPF ↔ HPF</td></tr>
+            <tr><td>Convolution</td><td class="m">x[n] ∗ h[n]</td><td class="m">X(e<sup>jω</sup>)H(e<sup>jω</sup>)</td><td>หัวใจของการกรอง</td></tr>
+            <tr><td>Multiplication</td><td class="m">x[n]y[n]</td><td class="m">(1/2π)∫<sub>2π</sub> X(e<sup>jθ</sup>)Y(e<sup>j(ω−θ)</sup>)dθ</td><td>periodic convolution</td></tr>
+            <tr><td>Differencing</td><td class="m">x[n] − x[n−1]</td><td class="m">(1 − e<sup>−jω</sup>)X(e<sup>jω</sup>)</td><td>เป็น highpass (ศูนย์ที่ ω=0)</td></tr>
+            <tr><td>Accumulation</td><td class="m">Σ<sub>m≤n</sub> x[m]</td><td class="m">X(e<sup>jω</sup>)/(1 − e<sup>−jω</sup>) + πX(e<sup>j0</sup>)Σδ(ω−2πk)</td><td>เป็น lowpass (พุ่งที่ ω=0)</td></tr>
+            <tr><td>Time expansion</td><td class="m">x<sub>(k)</sub>[n]</td><td class="m">X(e<sup>jkω</sup>)</td><td>ยืดเวลา k เท่า = บีบความถี่ k เท่า</td></tr>
+            <tr><td>Diff. in frequency</td><td class="m">n x[n]</td><td class="m">j dX(e<sup>jω</sup>)/dω</td><td>ใช้แก้โจทย์ (n+1)aⁿu[n]</td></tr>
+            <tr><td>Parseval</td><td class="m">Σ|x[n]|²</td><td class="m">(1/2π)∫<sub>2π</sub>|X(e<sup>jω</sup>)|²dω</td><td>พลังงานเท่ากันทั้งสองโดเมน</td></tr>
+          </tbody>
+        </table></div>
+        <div class="tscroll"><table>
+          <thead><tr><th class="m">x[n]</th><th class="m">X(e<sup>jω</sup>)</th><th>จำแบบไหน</th></tr></thead>
+          <tbody>
+            <tr><td class="m">δ[n]</td><td class="m">1</td><td>อิมพัลส์เดียว = ทุกความถี่เท่ากัน</td></tr>
+            <tr><td class="m">δ[n − n₀]</td><td class="m">e<sup>−jωn₀</sup></td><td>ขนาด 1 ตลอด เฟสเอียง</td></tr>
+            <tr><td class="m">aⁿu[n], |a|&lt;1</td><td class="m">1/(1 − ae<sup>−jω</sup>)</td><td>อนุกรมเรขาคณิต (Ex 3)</td></tr>
+            <tr><td class="m">(n+1)aⁿu[n]</td><td class="m">1/(1 − ae<sup>−jω</sup>)²</td><td>จากสมบัติ differentiation (Ex 2 ตอน α = β)</td></tr>
+            <tr><td class="m">พัลส์ |n| ≤ N₁</td><td class="m">sin(ω(N₁+½))/sin(ω/2)</td><td>Dirichlet kernel (Ex 4)</td></tr>
+            <tr><td class="m">e<sup>jω₀n</sup></td><td class="m">2πΣ<sub>l</sub>δ(ω − ω₀ − 2πl)</td><td>สัญญาณคาบ = อิมพัลส์ที่วนซ้ำทุก 2π</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <footer>
+        <span>อ้างอิง: CP203 Lecture 04 (สไลด์ 105–169) · Oppenheim &amp; Willsky บทที่ 5 · Soliman &amp; Srinath บทที่ 9</span>
+        <span>ทุกกราฟคำนวณสดจากสูตรในหน้านี้</span>
+      </footer>
+    </main>
+  </div>
+</div>
+
+<script>
+/* ===== shared kit: plots, steppers, controls (CEMII lecture pages) ===== */
+const K = (function(){
+'use strict';
+const MINUS = '−', TAU = Math.PI * 2;
+const C = {};
+const TOKENS = ['ink','muted','line','grid','axis','x','h','mark','prod','y','amber','surface','sunk'];
+function readColors(){ const cs = getComputedStyle(document.documentElement); TOKENS.forEach(k => { C[k] = cs.getPropertyValue('--'+k).trim() || '#888'; }); }
+readColors();
+
+/* ---------- numbers ---------- */
+function fmt(v, d){
+  if (d == null) d = 3;
+  if (!isFinite(v)) return (v < 0 ? MINUS : '') + '∞';
+  if (Math.abs(v) < 1e-10) v = 0;
+  const a = Math.abs(v), s = Number.isInteger(a) ? String(a) : String(+a.toFixed(d));
+  return (v < 0 && +s !== 0 ? MINUS : '') + s;
+}
+const fx = (v, d) => (v < 0 && Math.abs(v) >= Math.pow(10, -(d || 2)) / 2 ? MINUS : '') + Math.abs(v).toFixed(d == null ? 2 : d);
+function piLabel(v){
+  const k = v / Math.PI;
+  if (Math.abs(k) < 1e-9) return '0';
+  const q = Math.round(k * 4);
+  if (Math.abs(q - k * 4) > 1e-6) return fmt(v, 2);
+  const sg = q < 0 ? MINUS : '';
+  let num = Math.abs(q), den = 4;
+  const g = (a, b) => b ? g(b, a % b) : a;
+  const d = g(num, den); num /= d; den /= d;
+  return sg + (num === 1 ? 'π' : num + 'π') + (den === 1 ? '' : '/' + den);
+}
+function nice(range, target){
+  const raw = range / Math.max(1, target), p = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / p;
+  return (f < 1.5 ? 1 : f < 3 ? 2 : f < 7 ? 5 : 10) * p;
+}
+function rng(lo, hi, pad){
+  pad = pad == null ? .18 : pad;
+  const s = (hi - lo) || 1;
+  return [lo - (lo < 0 ? pad : pad * .5) * s, hi + pad * s];
+}
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+function simpson(f, a, b, n){
+  n = n % 2 ? n + 1 : n;
+  const hh = (b - a) / n; let s = f(a) + f(b);
+  for (let i = 1; i < n; i++) s += (i % 2 ? 4 : 2) * f(a + i * hh);
+  return s * hh / 3;
+}
+/* complex as [re, im] */
+const cadd = (a, b) => [a[0] + b[0], a[1] + b[1]];
+const cmul = (a, b) => [a[0]*b[0] - a[1]*b[1], a[0]*b[1] + a[1]*b[0]];
+const cabs = a => Math.hypot(a[0], a[1]);
+const carg = a => Math.atan2(a[1], a[0]);
+const cexp = th => [Math.cos(th), Math.sin(th)];
+function cstr(a, d){
+  d = d == null ? 3 : d;
+  const re = Math.abs(a[0]) < 5e-4 ? 0 : a[0], im = Math.abs(a[1]) < 5e-4 ? 0 : a[1];
+  if (im === 0) return fmt(re, d);
+  if (re === 0) return (im < 0 ? MINUS : '') + (Math.abs(im) === 1 ? '' : fmt(Math.abs(im), d)) + 'j';
+  return fmt(re, d) + (im < 0 ? ' ' + MINUS + ' ' : ' + ') + (Math.abs(im) === 1 ? '' : fmt(Math.abs(im), d)) + 'j';
+}
+/* DFT of complex array (arrays of [re,im]) — direct, N is small here */
+function dft(x){
+  const N = x.length, X = [];
+  for (let k = 0; k < N; k++){
+    let re = 0, im = 0;
+    for (let n = 0; n < N; n++){
+      const th = -TAU * k * n / N, c = Math.cos(th), s = Math.sin(th);
+      re += x[n][0] * c - x[n][1] * s; im += x[n][0] * s + x[n][1] * c;
+    }
+    X.push([re, im]);
+  }
+  return X;
+}
+
+/* ---------- plot ---------- */
+class Plot {
+  constructor(cv){ this.cv = cv; this.ctx = cv.getContext('2d'); this.h0 = +cv.dataset.h || 200; this.pad = {l:46, r:16, t:20, b:26}; }
+  size(){
+    const w = this.cv.clientWidth; if (!w) return false;
+    const H = Math.round(this.h0 * (w < 520 ? .84 : 1));
+    const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    const W = Math.round(w * dpr), HH = Math.round(H * dpr);
+    if (this.cv.width !== W || this.cv.height !== HH){ this.cv.width = W; this.cv.height = HH; }
+    this.cv.style.height = H + 'px';
+    this.w = w; this.H = H;
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0); this.ctx.clearRect(0, 0, w, H);
+    return true;
+  }
+  view(x0, x1, y0, y1){ this.x0 = x0; this.x1 = x1; this.y0 = y0; this.y1 = y1; return this; }
+  get L(){ return this.pad.l; } get R(){ return this.w - this.pad.r; }
+  get T(){ return this.pad.t; } get B(){ return this.H - this.pad.b; }
+  pw(){ return this.R - this.L; }
+  X(v){ return this.L + (v - this.x0) / (this.x1 - this.x0) * this.pw(); }
+  Y(v){ return this.T + (this.y1 - v) / (this.y1 - this.y0) * (this.B - this.T); }
+  inv(px){ return this.x0 + (px - this.L) / this.pw() * (this.x1 - this.x0); }
+  frame(o){
+    o = o || {}; const c = this.ctx; c.save();
+    const pi = !!o.piTick;
+    const tick = o.tick || (pi ? Math.PI / 2 : nice(this.x1 - this.x0, Math.max(4, this.pw() / 64)));
+    const grid = o.grid || tick / 2;
+    const ys = o.yTick || nice(this.y1 - this.y0, o.yT || 4);
+    c.lineWidth = 1; c.strokeStyle = C.grid; c.beginPath();
+    for (let i = Math.ceil(this.x0 / grid - 1e-9); i * grid <= this.x1 + 1e-9; i++){ const px = Math.round(this.X(i * grid)) + .5; c.moveTo(px, this.T); c.lineTo(px, this.B); }
+    for (let i = Math.ceil(this.y0 / ys - 1e-9); i * ys <= this.y1 + 1e-9; i++){ const py = Math.round(this.Y(i * ys)) + .5; c.moveTo(this.L, py); c.lineTo(this.R, py); }
+    c.stroke();
+    c.strokeStyle = C.axis; c.beginPath();
+    const p0 = Math.round(this.Y(0)) + .5; c.moveTo(this.L, p0); c.lineTo(this.R, p0);
+    if (this.x0 < 0 && this.x1 > 0){ const q = Math.round(this.X(0)) + .5; c.moveTo(q, this.T); c.lineTo(q, this.B); }
+    c.stroke();
+    c.fillStyle = C.muted; c.font = '11px "IBM Plex Mono", ui-monospace, monospace';
+    c.textAlign = 'center'; c.textBaseline = 'top';
+    for (let i = Math.ceil(this.x0 / tick - 1e-9); i * tick <= this.x1 + 1e-9; i++){
+      const v = i * tick; if (o.skip0 && Math.abs(v) < 1e-9) continue;
+      c.fillText(pi ? piLabel(v) : fmt(v, 2), this.X(v), this.B + 8);
+    }
+    if (!o.noY){
+      c.textAlign = 'right'; c.textBaseline = 'middle';
+      for (let i = Math.ceil(this.y0 / ys - 1e-9); i * ys <= this.y1 + 1e-9; i++) c.fillText(fmt(i * ys, 2), this.L - 8, this.Y(i * ys));
+    }
+    if (o.xl){ c.font = 'italic 14px "STIX Two Text", serif'; c.fillStyle = C.ink; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(o.xl, this.R + 3, this.Y(0)); }
+    c.restore(); return this;
+  }
+  clip(){ const c = this.ctx; c.save(); c.beginPath(); c.rect(this.L, this.T - 8, this.pw(), this.B - this.T + 16); c.clip(); }
+  unclip(){ this.ctx.restore(); }
+  curve(pts, col, w, o){
+    o = o || {}; if (!pts.length) return this; const c = this.ctx; this.clip();
+    c.globalAlpha = o.alpha == null ? 1 : o.alpha; c.strokeStyle = col; c.lineWidth = w || 2; c.lineJoin = 'round'; c.lineCap = 'round';
+    if (o.dash) c.setLineDash(o.dash);
+    const yc = v => clamp(this.Y(v), -5000, 5000);
+    c.beginPath(); let down = false;
+    pts.forEach(p => { if (p == null || !isFinite(p[1])){ down = false; return; } const X = this.X(p[0]), Y = yc(p[1]); if (down) c.lineTo(X, Y); else { c.moveTo(X, Y); down = true; } });
+    c.stroke(); this.unclip(); return this;
+  }
+  area(pts, col, al){
+    if (!pts.length) return this; const c = this.ctx; this.clip();
+    const yc = v => clamp(this.Y(v), -5000, 5000);
+    c.globalAlpha = al == null ? .25 : al; c.fillStyle = col; c.beginPath(); c.moveTo(this.X(pts[0][0]), this.Y(0));
+    pts.forEach(p => c.lineTo(this.X(p[0]), yc(p[1]))); c.lineTo(this.X(pts[pts.length-1][0]), this.Y(0)); c.closePath(); c.fill();
+    this.unclip(); return this;
+  }
+  stem(k, v, col, o){
+    o = o || {}; const c = this.ctx; const px = this.X(k) + (o.dx || 0), p0 = this.Y(0), p1 = clamp(this.Y(v), this.T - 6, this.B + 6);
+    if (px < this.L - 6 || px > this.R + 6) return this;
+    c.save(); c.globalAlpha = o.alpha == null ? 1 : o.alpha; c.strokeStyle = col; c.fillStyle = col; c.lineWidth = o.w || 2;
+    if (Math.abs(v) > 1e-12){ c.beginPath(); c.moveTo(px, p0); c.lineTo(px, p1); c.stroke(); }
+    c.beginPath(); c.arc(px, p1, o.r == null ? 3.4 : o.r, 0, TAU); c.fill();
+    if (o.ring){ c.strokeStyle = o.ring; c.lineWidth = 2; c.beginPath(); c.arc(px, p1, (o.r == null ? 3.4 : o.r) + 3.5, 0, TAU); c.stroke(); }
+    if (o.label != null){ c.font = '600 10.5px "IBM Plex Mono", monospace'; c.textAlign = 'center'; c.textBaseline = v >= 0 ? 'bottom' : 'top'; c.fillText(o.label, px, v >= 0 ? p1 - 6 : p1 + 6); }
+    c.restore(); return this;
+  }
+  arrow(x, v, col, o){ /* impulse arrow */
+    o = o || {}; const c = this.ctx, px = this.X(x), p0 = this.Y(0), p1 = this.Y(v);
+    if (px < this.L - 4 || px > this.R + 4) return this;
+    c.save(); c.strokeStyle = col; c.fillStyle = col; c.lineWidth = o.w || 2;
+    c.beginPath(); c.moveTo(px, p0); c.lineTo(px, p1); c.stroke();
+    const d = v >= 0 ? 1 : -1;
+    c.beginPath(); c.moveTo(px, p1); c.lineTo(px - 4.5, p1 + 8 * d); c.lineTo(px + 4.5, p1 + 8 * d); c.closePath(); c.fill();
+    if (o.label){ c.font = '600 10.5px "IBM Plex Mono", monospace'; c.textAlign = 'center'; c.textBaseline = v >= 0 ? 'bottom' : 'top'; c.fillText(o.label, px, v >= 0 ? p1 - 10 : p1 + 10); }
+    c.restore(); return this;
+  }
+  dot(x, y, col, r){ const c = this.ctx; c.save(); c.fillStyle = col; c.beginPath(); c.arc(this.X(x), clamp(this.Y(y), this.T - 4, this.B + 4), r || 3, 0, TAU); c.fill(); c.restore(); return this; }
+  point(x, y, col, ring){ const c = this.ctx; c.save(); c.fillStyle = col; c.beginPath(); c.arc(this.X(x), clamp(this.Y(y), this.T, this.B), 5, 0, TAU); c.fill(); if (ring){ c.strokeStyle = ring; c.lineWidth = 2; c.beginPath(); c.arc(this.X(x), clamp(this.Y(y), this.T, this.B), 9, 0, TAU); c.stroke(); } c.restore(); return this; }
+  vline(x, col, label, o){
+    o = o || {}; const c = this.ctx, px = Math.round(this.X(x)) + .5; if (px < this.L - 1 || px > this.R + 1) return this;
+    c.save(); c.strokeStyle = col; c.lineWidth = o.w || 1.2; if (o.dash !== false) c.setLineDash(o.dash || [4, 4]);
+    c.beginPath(); c.moveTo(px, this.T - 2); c.lineTo(px, this.B); c.stroke(); c.setLineDash([]);
+    if (label){ c.fillStyle = col; c.font = '500 11.5px "IBM Plex Mono", monospace'; c.textBaseline = 'bottom'; const right = px > this.R - 62; c.textAlign = right ? 'right' : 'left'; c.fillText(label, px + (right ? -5 : 5), this.T - 3); }
+    c.restore(); return this;
+  }
+  band(a, b, col, al){ const c = this.ctx; c.save(); c.globalAlpha = al == null ? .1 : al; c.fillStyle = col; const x0 = Math.max(this.L, this.X(a)), x1 = Math.min(this.R, this.X(b)); if (x1 > x0) c.fillRect(x0, this.T, x1 - x0, this.B - this.T); c.restore(); return this; }
+  text(s, x, y, col, o){
+    o = o || {}; const c = this.ctx; c.save(); c.fillStyle = col;
+    c.font = o.font || '500 12px "IBM Plex Sans Thai", sans-serif';
+    c.textAlign = o.align || 'center'; c.textBaseline = o.base || 'middle';
+    c.fillText(s, x, y); c.restore(); return this;
+  }
+  label(s, x, y, col, o){ return this.text(s, this.X(x), this.Y(y), col, o); }
+}
+
+/* ---------- figure registry ---------- */
+const FIGS = [];
+function fig(id, draw){
+  const cv = document.getElementById(id); if (!cv) return null;
+  const p = new Plot(cv); FIGS.push({p, draw, cv}); return p;
+}
+let raf = 0;
+function redraw(){ if (raf) return; raf = requestAnimationFrame(() => { raf = 0; FIGS.forEach(f => { if (f.cv.offsetParent === null && f.cv.clientWidth === 0) return; if (f.p.size()) f.draw(f.p); }); }); }
+const $ = s => document.querySelector(s);
+const $$ = s => Array.prototype.slice.call(document.querySelectorAll(s));
+function val(sel){ const e = $(sel); return e ? +e.value : 0; }
+function sval(sel){ const e = $(sel); return e ? e.value : ''; }
+function chk(sel){ const e = $(sel); return !!(e && e.checked); }
+function bind(sel, fn){
+  $$(sel).forEach(e => e.addEventListener('input', ev => { if (fn) fn(ev); redraw(); }));
+}
+function out(sel, text){ const e = $(sel); if (e) e.textContent = text; }
+function html(sel, s){ const e = $(sel); if (e) e.innerHTML = s; }
+
+/* ---------- derivation steppers ---------- */
+function derivInit(){
+  $$('.deriv').forEach(list => {
+    const items = Array.prototype.slice.call(list.children);
+    const nav = document.createElement('div'); nav.className = 'dnav';
+    nav.innerHTML = '<button class="btn sm" type="button" data-a="prev">‹ ก่อนหน้า</button>'
+      + '<button class="btn sm primary" type="button" data-a="next">ขั้นถัดไป ›</button>'
+      + '<span class="cnt"></span><button class="btn sm" type="button" data-a="all">แสดงทั้งหมด</button>';
+    list.parentNode.insertBefore(nav, list.nextSibling);
+    let i = 1;
+    function render(){
+      items.forEach((li, k) => li.classList.toggle('dim', k >= i));
+      nav.querySelector('.cnt').textContent = `ขั้นที่ ${Math.min(i, items.length)} / ${items.length}`;
+      nav.querySelector('[data-a=prev]').disabled = i <= 1;
+      nav.querySelector('[data-a=next]').disabled = i >= items.length;
+    }
+    nav.addEventListener('click', e => {
+      const a = e.target.closest('[data-a]'); if (!a) return;
+      if (a.dataset.a === 'next') i = Math.min(items.length, i + 1);
+      else if (a.dataset.a === 'prev') i = Math.max(1, i - 1);
+      else i = items.length;
+      render();
+    });
+    render();
+  });
+}
+
+/* ---------- table of contents scrollspy ---------- */
+function tocInit(){
+  const links = $$('.toc a'); if (!links.length) return;
+  const secs = links.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(en => {
+      if (!en.isIntersecting) return;
+      links.forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + en.target.id));
+    });
+  }, {rootMargin: '-10% 0px -70% 0px', threshold: 0});
+  secs.forEach(s => io.observe(s));
+}
+
+/* ---------- animation loop helper ---------- */
+function ticker(step){
+  let on = false, last = 0, id = 0;
+  function frame(now){
+    if (!on) return;
+    const dt = Math.min(.05, (now - last) / 1000); last = now;
+    step(dt); redraw(); id = requestAnimationFrame(frame);
+  }
+  return {
+    start(){ if (on) return; on = true; last = performance.now(); id = requestAnimationFrame(frame); },
+    stop(){ on = false; if (id) cancelAnimationFrame(id); id = 0; },
+    toggle(){ on ? this.stop() : this.start(); return on; },
+    get running(){ return on; }
+  };
+}
+
+/* ---------- boot ---------- */
+function boot(){
+  derivInit(); tocInit(); redraw();
+  const onTheme = () => { readColors(); redraw(); };
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', onTheme);
+  new MutationObserver(onTheme).observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
+  if (window.ResizeObserver) new ResizeObserver(() => redraw()).observe(document.body);
+  else window.addEventListener('resize', redraw);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(redraw);
+}
+
+return {C, MINUS, TAU, fmt, fx, piLabel, nice, rng, clamp, simpson, cadd, cmul, cabs, carg, cexp, cstr, dft,
+        Plot, fig, redraw, $, $$, val, sval, chk, bind, out, html, ticker, boot, readColors};
+})();
+
+(function(){
+'use strict';
+const {fmt, fx, cabs, carg, cstr, MINUS, TAU} = K;
+const PI = Math.PI;
+const parseSeq = s => String(s).replace(/[−]/g, '-').split(/[\s,;]+/).filter(Boolean).map(Number).filter(v => isFinite(v)).slice(0, 16);
+
+/* ===== 01 periodicity ===== */
+K.fig('pr-time', p => {
+  const w = K.val('#pr-w'), alias = K.chk('#pr-alias');
+  p.view(-.6, 24.6, -1.5, 1.5).frame({tick: 4, grid: 1, yT: 3, xl: 'n'});
+  const c1 = [], c2 = [];
+  for (let i = 0; i <= 1200; i++){ const t = -.6 + 25.2 * i / 1200; c1.push([t, Math.cos(w * t)]); c2.push([t, Math.cos((w + TAU) * t)]); }
+  if (alias) p.curve(c2, K.C.h, 1.3, {dash:[4, 3], alpha:.85});
+  p.curve(c1, K.C.mark, 1.5, {dash:[5, 4], alpha:.85});
+  for (let n = 0; n <= 24; n++) p.stem(n, Math.cos(w * n), K.C.x, {r: 3.2});
+  K.out('#pr-wv', fx(w));
+  const rel = w / PI;
+  K.html('#pr-eq', `ω = ${fmt(w, 3)} = ${fmt(rel, 2)}π <span class="up">rad/sample</span>`);
+  const kind = Math.min(Math.abs(rel % 2), 2 - Math.abs(rel % 2));
+  K.html('#pr-sub', kind < .35 ? 'ใกล้ ω = 0 → <b>ความถี่ต่ำ</b> สัญญาณเปลี่ยนช้า ๆ' : kind > .75 ? 'ใกล้ ω = π → <b>ความถี่สูงสุด</b> ของ DT (สลับเครื่องหมายเกือบทุกจุด)' : 'ความถี่กลาง ๆ');
+  K.out('#pr-val', 'ω/π = ' + fmt(rel, 2));
+});
+K.bind('#pr-w'); K.bind('#pr-alias');
+
+/* ===== 02 DTFS ===== */
+function dtfsA(k, N, N1){
+  if (((k % N) + N) % N === 0) return (2 * N1 + 1) / N;
+  return Math.sin(TAU * k * (N1 + .5) / N) / (N * Math.sin(PI * k / N));
+}
+K.fig('fs-x', p => {
+  const N = K.val('#fs-N'), N1 = Math.min(K.val('#fs-N1'), Math.floor((N - 1) / 2));
+  p.view(-2.2 * N, 2.2 * N, -.35, 1.45).frame({tick: N, grid: Math.max(1, Math.round(N / 5)), yT: 2, xl: 'n'});
+  for (let n = Math.ceil(-2.2 * N); n <= 2.2 * N; n++){
+    let m = ((n % N) + N) % N; if (m > N / 2) m -= N;
+    p.stem(n, Math.abs(m) <= N1 ? 1 : 0, Math.abs(m) <= N1 ? K.C.x : K.C.axis, {r: Math.abs(m) <= N1 ? 3.2 : 2, alpha: Math.abs(m) <= N1 ? 1 : .6});
+  }
+  K.out('#fs-Nv', String(N)); K.out('#fs-N1v', String(N1));
+});
+K.fig('fs-a', p => {
+  const N = K.val('#fs-N'), N1 = Math.min(K.val('#fs-N1'), Math.floor((N - 1) / 2));
+  const a0 = (2 * N1 + 1) / N;
+  p.view(-1.15 * N, 1.15 * N, -.45 * a0, 1.3 * a0).frame({tick: Math.max(1, Math.round(N / 5)), grid: Math.max(1, Math.round(N / 10)), yT: 3, xl: 'k'});
+  const env = [];
+  for (let i = 0; i <= 900; i++){
+    const k = -1.15 * N + 2.3 * N * i / 900;
+    const den = N * Math.sin(PI * k / N);
+    env.push([k, Math.abs(den) < 1e-6 ? (2 * N1 + 1) / N : Math.sin(TAU * k * (N1 + .5) / N) / den]);
+  }
+  p.curve(env, K.C.prod, 1.4, {dash:[5, 4], alpha:.9});
+  for (let k = Math.ceil(-1.15 * N); k <= 1.15 * N; k++) p.stem(k, dtfsA(k, N, N1), K.C.mark, {r: 3});
+  p.vline(0, K.C.line, null, {dash:[2, 3]}); p.vline(N, K.C.line, 'k = N', {dash:[2, 3]});
+  K.html('#fs-eq', `N = ${N}, N₁ = ${N1} → a₀ = (2N₁+1)/N = ${fmt(a0, 3)} · a<sub>k+N</sub> = a<sub>k</sub> (ดูเส้นที่ k = 0 กับ k = N สูงเท่ากัน)`);
+  K.out('#fs-val', 'ω₀ = ' + fmt(TAU / N, 3));
+});
+K.bind('#fs-N'); K.bind('#fs-N1');
+
+/* ===== 03 DTFT ===== */
+const DT = {
+  apow: {plab:'พารามิเตอร์ a', min:-0.9, max:0.9, step:0.02, def:0.5,
+    x:(n, a) => n >= 0 ? Math.pow(a, n) : 0,
+    X:(w, a) => { const re = 1 - a * Math.cos(w), im = a * Math.sin(w), d = re * re + im * im; return [re / d, -im / d]; },
+    tex:a => `X(e<sup>jω</sup>) = 1/(1 − ae<sup>−jω</sup>) = 1/(1 − ${fmt(a, 2)}e<sup>−jω</sup>)`,
+    note:'ที่ ω = 0 ได้ 1/(1−a) · ที่ ω = π ได้ 1/(1+a) — ถ้า a > 0 ยอดอยู่ที่ ω = 0 (lowpass) ถ้า a < 0 ยอดย้ายไป ω = π (highpass)'},
+  rect: {plab:'ครึ่งความกว้าง N₁', min:1, max:8, step:1, def:2,
+    x:(n, N1) => Math.abs(n) <= N1 ? 1 : 0,
+    X:(w, N1) => { const d = Math.sin(w / 2); return [Math.abs(d) < 1e-9 ? 2 * N1 + 1 : Math.sin(w * (N1 + .5)) / d, 0]; },
+    tex:N1 => `X(e<sup>jω</sup>) = sin(ω(N₁+½))/sin(ω/2), N₁ = ${N1} → X(e<sup>j0</sup>) = 2N₁+1 = ${2 * N1 + 1}`,
+    note:'Dirichlet kernel — พัลส์ยิ่งกว้าง (N₁ มาก) ยอดกลางยิ่งแคบ เป็นคู่แฝดของ sinc ในฝั่ง continuous'},
+  delta: {plab:'(ไม่มีพารามิเตอร์)', min:0, max:1, step:1, def:0,
+    x:n => n === 0 ? 1 : 0, X:() => [1, 0],
+    tex:() => 'X(e<sup>jω</sup>) = 1 — ทุกความถี่เท่ากันหมด',
+    note:'อิมพัลส์หนึ่งจุด = พลังงานเท่ากันทุกความถี่ (สไลด์ 136)'},
+  cos: {plab:'ความถี่ ω₀ (×π)', min:0.1, max:0.95, step:0.05, def:0.5,
+    x:(n, r) => Math.cos(PI * r * n), X:() => [0, 0],
+    tex:r => `X(e<sup>jω</sup>) = π Σ<sub>l</sub> [δ(ω − ω₀ − 2πl) + δ(ω + ω₀ − 2πl)], ω₀ = ${fmt(r, 2)}π`,
+    note:'สัญญาณคาบให้อิมพัลส์ และเพราะ DTFT เป็นคาบ 2π อิมพัลส์จึงซ้ำทุก 2π (สไลด์ 137)'}
+};
+const dtNow = () => DT[K.sval('#dt-sig')] || DT.apow;
+K.fig('dt-x', p => {
+  const s = dtNow(), a = K.val('#dt-p');
+  p.view(-12.6, 24.6, -1.3, 1.45).frame({tick: 4, grid: 2, yT: 3, xl: 'n'});
+  for (let n = -12; n <= 24; n++){ const v = s.x(n, a); p.stem(n, v, Math.abs(v) < 1e-9 ? K.C.axis : K.C.x, {r: Math.abs(v) < 1e-9 ? 2 : 3.2, alpha: Math.abs(v) < 1e-9 ? .6 : 1}); }
+  K.out('#dt-pv', K.sval('#dt-sig') === 'rect' ? String(a) : fx(a));
+  K.html('#dt-plab', s.plab);
+  K.html('#dt-formula', s.tex(a)); K.html('#dt-note', s.note);
+});
+function dtAxis(p, top){
+  p.view(-TAU - .4, TAU + .4, -top * .12, top).frame({piTick: true, grid: PI / 2, yT: 3, xl: 'ω'});
+  p.band(-PI, PI, K.C.line, .28);
+}
+K.fig('dt-mag', p => {
+  const s = dtNow(), a = K.val('#dt-p'), kind = K.sval('#dt-sig');
+  if (kind === 'cos'){
+    dtAxis(p, 1.45);
+    for (let l = -1; l <= 1; l++){ p.arrow(PI * a + TAU * l, 1, K.C.mark, {}); p.arrow(-PI * a + TAU * l, 1, K.C.mark, {}); }
+    p.text('อิมพัลส์ซ้ำทุก 2π', (p.L + p.R) / 2, p.T + 12, K.C.muted);
+    return;
+  }
+  let mx = 0; const pts = [];
+  for (let i = 0; i <= 1200; i++){ const w = -TAU - .4 + (TAU * 2 + .8) * i / 1200, m = cabs(s.X(w, a)); pts.push([w, m]); mx = Math.max(mx, m); }
+  dtAxis(p, mx * 1.25 || 1);
+  p.curve(pts, K.C.mark, 2.4);
+});
+K.fig('dt-ph', p => {
+  const s = dtNow(), a = K.val('#dt-p'), kind = K.sval('#dt-sig');
+  p.view(-TAU - .4, TAU + .4, -PI * 1.2, PI * 1.2).frame({piTick: true, grid: PI / 2, yTick: PI / 2, xl: 'ω'});
+  p.band(-PI, PI, K.C.line, .28);
+  if (kind === 'cos' || kind === 'delta'){ p.text('เฟสเป็นศูนย์', (p.L + p.R) / 2, p.T + 14, K.C.muted); return; }
+  const pts = [];
+  for (let i = 0; i <= 1600; i++){
+    const w = -TAU - .4 + (TAU * 2 + .8) * i / 1600, X = s.X(w, a);
+    const ph = cabs(X) < 1e-9 ? null : carg(X);
+    pts.push(ph == null ? null : [w, ph]);
+  }
+  p.curve(pts.map((q, i) => (q && pts[i-1] && Math.abs(q[1] - pts[i-1][1]) > PI ? null : q)), K.C.amber, 2.2);
+});
+K.bind('#dt-sig', () => { const s = dtNow(); const inp = K.$('#dt-p'); inp.min = s.min; inp.max = s.max; inp.step = s.step; inp.value = s.def; });
+K.bind('#dt-p');
+
+/* ===== 04 DFT ===== */
+function dfSeq(){ const v = parseSeq(K.sval('#df-x')); return v.length >= 2 ? v : [1, 2, 0, -1]; }
+K.fig('df-x-plot', p => {
+  const x = dfSeq(), N = x.length;
+  const mx = Math.max(1, ...x.map(Math.abs));
+  p.view(-.8, N - .2, -1.35 * mx, 1.35 * mx).frame({tick: 1, grid: 1, yT: 3, xl: 'n'});
+  x.forEach((v, n) => p.stem(n, v, K.C.x, {label: fmt(v, 2)}));
+});
+K.fig('df-mag', p => {
+  const x = dfSeq(), N = x.length;
+  const X = K.dft(x.map(v => [v, 0]));
+  const dtft = w => { let re = 0, im = 0; x.forEach((v, n) => { re += v * Math.cos(w * n); im -= v * Math.sin(w * n); }); return [re, im]; };
+  let mx = 0; const pts = [];
+  for (let i = 0; i <= 1000; i++){ const w = TAU * i / 1000, m = cabs(dtft(w)); pts.push([w, m]); mx = Math.max(mx, m); }
+  p.view(-.25, TAU + .25, -.12 * mx, 1.3 * mx || 1).frame({piTick: true, grid: PI / 4, yT: 3, xl: 'ω'});
+  p.curve(pts, K.C.prod, 2, {alpha:.9});
+  X.forEach((z, k) => p.stem(TAU * k / N, cabs(z), K.C.mark, {r: 3.6, label: fmt(cabs(z), 2)}));
+  const tb = K.$('#df-tbody');
+  if (tb) tb.innerHTML = X.map((z, k) => `<tr><td class="m">${k}</td><td class="m">${fmt(TAU * k / N, 3)}</td><td class="m">${cstr(z, 3)}</td><td class="num">${fmt(cabs(z), 3)}</td><td class="num">${cabs(z) < 1e-9 ? '—' : fmt(carg(z), 3)}</td></tr>`).join('');
+});
+K.bind('#df-x');
+
+/* ===== 05 circular convolution ===== */
+function ccData(){
+  let x = parseSeq(K.sval('#cc-x')), h = parseSeq(K.sval('#cc-h'));
+  if (x.length < 2) x = [1, 2, 0, -1];
+  if (h.length < 2) h = [1, 3, -1, -2];
+  const N = Math.max(x.length, h.length);
+  while (x.length < N) x.push(0);
+  while (h.length < N) h.push(0);
+  const lin = new Array(2 * N - 1).fill(0);
+  for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) lin[i + j] += x[i] * h[j];
+  const circ = new Array(N).fill(0);
+  lin.forEach((v, i) => { circ[i % N] += v; });
+  return {x, h, N, lin, circ};
+}
+K.fig('cc-y', p => {
+  const {N, circ} = ccData();
+  const mx = Math.max(1, ...circ.map(Math.abs));
+  p.view(-.8, N - .2, -1.4 * mx, 1.4 * mx).frame({tick: 1, grid: 1, yT: 3, xl: 'n'});
+  circ.forEach((v, n) => p.stem(n, v, K.C.y, {label: fmt(v, 2)}));
+});
+K.fig('cc-lin', p => {
+  const {N, lin} = ccData();
+  const mx = Math.max(1, ...lin.map(Math.abs));
+  p.view(-.8, lin.length - .2, -1.4 * mx, 1.4 * mx).frame({tick: 1, grid: 1, yT: 3, xl: 'n'});
+  lin.forEach((v, n) => p.stem(n, v, n >= N ? K.C.prod : K.C.x, {label: fmt(v, 2)}));
+  if (lin.length > N) p.band(N - .5, lin.length, K.C.prod, .1);
+  const {circ} = ccData();
+  const tb = K.$('#cc-tbody');
+  if (tb) tb.innerHTML = circ.map((v, n) => `<tr><td class="m">${n}</td><td class="num">${fmt(lin[n], 3)}</td><td class="num">${n + N < lin.length ? fmt(lin[n + N], 3) : '—'}</td><td class="num"><b>${fmt(v, 3)}</b></td></tr>`).join('');
+});
+K.bind('#cc-x'); K.bind('#cc-h');
+
+/* ===== 06 FFT ===== */
+K.fig('ff-plot', p => {
+  const pw = K.val('#ff-n'), N = Math.pow(2, pw);
+  p.view(0, 14.4, -.06, 1.12).frame({tick: 2, grid: 1, yT: 3, xl: 'log₂N', noY: true});
+  const maxOps = Math.pow(2, 14) * Math.pow(2, 14);
+  const sc = v => Math.log10(v + 1) / Math.log10(maxOps + 1);
+  const a = [], b = [];
+  for (let e = 1; e <= 14; e += .1){ const n = Math.pow(2, e); a.push([e, sc(n * n)]); b.push([e, sc(n * Math.log2(n))]); }
+  p.curve(a, K.C.h, 2.4).curve(b, K.C.y, 2.4);
+  p.vline(pw, K.C.mark, 'N = ' + N);
+  p.point(pw, sc(N * N), K.C.h); p.point(pw, sc(N * Math.log2(N)), K.C.y);
+  p.text('สเกลล็อก', p.R - 8, p.T + 10, K.C.muted, {align:'right'});
+  K.out('#ff-nv', String(N));
+  const d = N * N, f = N * Math.log2(N);
+  K.html('#ff-eq', `N = ${N} → DFT ตรง ๆ ${d.toLocaleString('en-US')} การคูณ · FFT ${Math.round(f).toLocaleString('en-US')} การคูณ`);
+  K.out('#ff-val', 'เร็วขึ้น ' + fmt(d / f, 1) + '×');
+});
+K.bind('#ff-n');
+
+K.boot();
+})();
+</script>
+</body>
+</html>
