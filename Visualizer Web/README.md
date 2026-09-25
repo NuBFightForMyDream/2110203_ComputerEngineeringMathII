@@ -13,6 +13,8 @@ Visualizer Web/
 │   ├── fourier-dt.html                 ← Lecture 04 DTFS / DTFT / DFT / FFT
 │   └── sampling-filtering.html         ← Lecture 05 Sampling & Filtering
 └── Optimization/                       ← ยังว่าง
+
+../Midterm Signals/index.html           ← เฉลย Midterm Quiz 2 (ลิงก์จาก Signal Part I ด้วย path)
 ```
 
 แต่ละไฟล์ `.html` เป็นไฟล์เดียวจบ (CSS + JS อยู่ในตัว) เปิดเดี่ยว ๆ ก็ได้ กราฟทุกอันคำนวณสดจากสูตร ไม่ได้ฝังรูปไว้

@@ -128,7 +128,10 @@ const PARTS = [
       tags: ['<span class="math">X(e<sup>jω</sup>) = Σ x[n]e<sup>−jωn</sup></span>', '<span class="math">X[k]</span> = สุ่มที่ <span class="math">2πk/N</span>', 'circular conv.', 'FFT'] },
     { id: 'apps', no: '05', title: 'Sampling & Filtering', th: 'การสุ่มและการกรอง', file: 'sampling-filtering.html',
       desc: 'สเปกตรัมซ้อนกันตอนสุ่มช้าเกินไป (aliasing), คิด Nyquist rate, ตัวกรองอุดมคติ 4 ชนิด, moving average / differencing และวงจร RC ที่เป็นตัวกรองตัวแรกของทุกคน',
-      tags: ['<span class="math">ω<sub>s</sub> ≥ 2ω<sub>B</sub></span>', '<span class="math">f<sub>p</sub> = |f − kf<sub>s</sub>|</span>', '<span class="math">Y = X·H</span>', 'RC filter'] }
+      tags: ['<span class="math">ω<sub>s</sub> ≥ 2ω<sub>B</sub></span>', '<span class="math">f<sub>p</sub> = |f − kf<sub>s</sub>|</span>', '<span class="math">Y = X·H</span>', 'RC filter'] },
+    { id: 'midterm', no: 'Q2', kind: 'MIDTERM', title: 'Midterm · Quiz 2', th: 'เฉลยข้อสอบ', path: '../Midterm Signals/index.html',
+      desc: 'เฉลย Quiz 2 ครบ 11 ข้อ ทีละขั้นพร้อมกราฟ: convolution, สมบัติ Fourier transform, Parseval, Fourier series, DTFT, DFT, Fourier interpolation และ aliasing — ติ๊กข้อที่ทำแล้วได้',
+      tags: ['11 ข้อ', 'convolution', 'Parseval', 'DTFT / DFT', 'aliasing'] }
   ]},
   { id: 'optim', name: 'Optimization', short: 'Optim', th: 'การหาค่าเหมาะที่สุด', folder: 'Optimization', lectures: [] }
 ];
@@ -137,6 +140,7 @@ const BUNDLE = window.CEM_BUNDLE || {};
 const $ = s => document.querySelector(s);
 const stage = $('#stage'), home = $('#home'), frames = {};
 const all = [];
+/* ใส่ path แทน file ได้ ถ้าไฟล์อยู่นอกโฟลเดอร์ของ part (เทียบกับหน้านี้) */
 PARTS.forEach(p => p.lectures.forEach(l => all.push(Object.assign({key: p.id + '/' + l.id, part: p, path: p.folder + '/' + l.file}, l))));
 
 /* nav */
@@ -149,7 +153,7 @@ $('#parts').innerHTML = PARTS.map(p => `
     <div class="part-head"><h2 id="part-${p.id}">${p.name}</h2><span class="th">${p.th}</span><span class="count">${p.lectures.length ? p.lectures.length + ' visualizer' : 'ยังไม่มี'}</span></div>
     ${p.lectures.length ? `<ol class="lecs">${p.lectures.map(l => `
       <li><a class="lec-row" href="#${p.id}/${l.id}">
-        <span class="lec-no">${l.no}<small>LECTURE</small></span>
+        <span class="lec-no">${l.no}<small>${l.kind || 'LECTURE'}</small></span>
         <span><span class="lec-t">${l.title}<span class="th">${l.th}</span></span>
           <span class="lec-d">${l.desc}</span>
           <span class="chips">${l.tags.map(t => `<span>${t}</span>`).join('')}</span></span>
@@ -179,7 +183,7 @@ function route(){
     if (!f){
       f = document.createElement('iframe');
       f.className = 'lec';
-      f.title = `Lecture ${lec.no} ${lec.title}`;
+      f.title = `${lec.kind ? lec.kind[0] + lec.kind.slice(1).toLowerCase() : 'Lecture'} ${lec.no} ${lec.title}`;
       f.addEventListener('load', () => syncTheme(f));
       if (BUNDLE[lec.key]) f.srcdoc = BUNDLE[lec.key];
       else f.src = encodeURI(lec.path);
